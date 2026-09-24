@@ -65,8 +65,27 @@ export interface Membership {
   position: number;
 }
 
+/** A signed-in account on a platform. `id` is the platform's stable identifier when it has one (survives a rename). */
+export interface AccountRef {
+  platform: string;
+  id?: string;
+  handle: string;
+}
+
 /** One unit of ingestion. Idempotent: applying the same batch twice changes nothing but `last_seen_at`. */
 export interface ParsedBatch {
+  /**
+   * The account this batch was read as. Storage binds the library to it on first use and refuses a different account
+   * (AccountMismatchError) atomically with the write, so two accounts can never be mixed.
+   */
+  account?: AccountRef;
+  /**
+   * These items come from the NEWEST end of the platform's saved list (the first page). Videos in such a batch that the library has not
+   * seen before are new saves: when the library already holds data, storage dates them by when they were first seen (newest first, one
+   * second apart) instead of trusting a page-boundary estimate, which shifts every time the list grows and would file a new save among
+   * older ones. Only meaningful for platforms whose saved list is ordered newest first.
+   */
+  headOfList?: boolean;
   items: SavedItem[];
   collections?: Collection[];
   memberships?: Membership[];
@@ -155,4 +174,6 @@ export interface ExportBundle {
   items: Array<Omit<StoredItem, 'id' | 'collections'>>;
   collections: Array<Omit<StoredCollection, 'itemsSeen'>>;
   memberships: Membership[];
+  /** The account binding, when there is one (absent in older exports). */
+  accounts?: AccountRef[];
 }

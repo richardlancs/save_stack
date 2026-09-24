@@ -31,8 +31,11 @@ function getWorker(): Worker {
   return w;
 }
 
-chrome.runtime.onMessage.addListener((message: RuntimeMessage, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message: RuntimeMessage, sender, sendResponse) => {
   if (message?.target !== 'offscreen') return false; // not ours; let the right listener answer
+  // Only our own service worker may drive the database owner. A content script (which has a tab) runs inside a web page and must
+  // never reach export / wipe / import, so a message from one is ignored here even though runtime messages reach every extension context.
+  if (sender.id !== chrome.runtime.id || sender.tab !== undefined) return false;
   const { request } = message;
   const answer = new Promise<RpcResponse>((resolve) => {
     const timer = setTimeout(() => { pending.delete(request.id); resolve(unavailable(request.id, 'database request timed out')); }, REQUEST_TIMEOUT_MS);

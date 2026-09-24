@@ -144,3 +144,50 @@ describe('what M2 will query', () => {
     expect(ftsMatch(db, '"caption"')).toHaveLength(2);
   });
 });
+
+describe('partial records and the full-text index (M3 review)', () => {
+  it('a stub record leaves the full-text row exactly as it was, and the text stays searchable', async () => {
+    const { adapter, db } = await memoryAdapter();
+    await adapter.upsertBatch(batch({ items: [item(1, { hashtags: ['pasta'], authorName: 'Nick' })], collections: [coll(1, 'Recipes')], memberships: [member(1, 1)] }));
+    const before = JSON.stringify(db.selectObjects('SELECT * FROM items_fts'));
+    await adapter.upsertBatch(batch({ items: [{ ...item(1), caption: undefined, hashtags: undefined, authorHandle: '', authorName: undefined, soundTitle: undefined, soundAuthor: undefined }] }, T0 + 1));
+    expect(JSON.stringify(db.selectObjects('SELECT * FROM items_fts'))).toBe(before);
+    expect(assertFtsConsistent(db)).toEqual([]);
+    expect(ftsMatch(db, 'pasta')).toEqual([1]);
+  });
+
+  it('a partial update that changes one field keeps the index consistent with the merged record', async () => {
+    const { adapter, db } = await memoryAdapter();
+    await adapter.upsertBatch(batch({ items: [item(1, { hashtags: ['pasta'], soundTitle: undefined })] }));
+    await adapter.upsertBatch(batch({ items: [{ ...item(1), caption: undefined, hashtags: undefined, soundTitle: 'Tarantella' }] }, T0 + 1));
+    expect(assertFtsConsistent(db)).toEqual([]);
+    expect(ftsMatch(db, 'tarantella')).toEqual([1]);
+    expect(ftsMatch(db, 'pasta')).toEqual([1]); // the tags it did not resend are still indexed
+  });
+
+  it('a refused account leaves not one row behind', async () => {
+    const { adapter, db } = await memoryAdapter();
+    await adapter.upsertBatch({ ...batch({ items: [item(1)] }), account: { platform: 'tiktok', handle: 'alice' } });
+    const counts = () => ['items', 'items_fts', 'hashtags', 'collections', 'item_collections', 'meta'].map((t) => Number(db.selectValue(`SELECT count(*) FROM ${t}`)));
+    const before = counts();
+    await expect(adapter.upsertBatch({ ...batch({ items: items(2, 30), collections: [coll(1, 'X')], memberships: [member(2, 1)] }), account: { platform: 'tiktok', handle: 'bob' } })).rejects.toThrow(/belongs to "alice"/);
+    expect(counts()).toEqual(before);
+    expect(assertFtsConsistent(db)).toEqual([]);
+  });
+
+  it('an unreadable stored binding refuses writes instead of guessing', async () => {
+    const { adapter, db } = await memoryAdapter();
+    await adapter.upsertBatch({ ...batch({ items: [item(1)] }), account: { platform: 'tiktok', handle: 'alice' } });
+    db.exec("UPDATE meta SET value = 'not json' WHERE key = 'account.tiktok'");
+    await expect(adapter.upsertBatch({ ...batch({ items: [item(2)] }), account: { platform: 'tiktok', handle: 'alice' } })).rejects.toThrow(/unreadable/);
+    expect(await adapter.getAccount('tiktok')).toBeNull(); // reading it never throws
+  });
+
+  it('the meta table exists at the latest schema and is emptied by wipe', async () => {
+    const { adapter, db } = await memoryAdapter();
+    expect(Number(db.selectValue("SELECT count(*) FROM sqlite_master WHERE name = 'meta'"))).toBe(1);
+    await adapter.upsertBatch({ ...batch({ items: [item(1)] }), account: { platform: 'tiktok', handle: 'alice' } });
+    await adapter.wipe();
+    expect(Number(db.selectValue('SELECT count(*) FROM meta'))).toBe(0);
+  });
+});

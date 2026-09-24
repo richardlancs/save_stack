@@ -45,6 +45,8 @@ export interface ResultItem {
   item: StoredItem;
   snippet: HighlightSegment[];
   score: number;
+  /** A link back to the original post, built by the platform's adapter (absent when the platform has no adapter). */
+  url?: string;
 }
 
 export interface SuggestedChip {

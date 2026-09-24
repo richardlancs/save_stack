@@ -7,6 +7,7 @@ import { applyPragmas } from '../../../core/storage/sqlite/migrate';
 import { SqliteAdapter } from '../../../core/storage/sqlite/sqlite-adapter';
 import { RPC_VERSION, type RpcResponse } from '../../rpc/protocol';
 import { createSearchGate } from '../../rpc/search-gate';
+import { registry } from '../../../platforms/registry';
 import { createRpcServer } from '../../rpc/server';
 
 const POOL = { name: 'scroganize', directory: '.scroganize', initialCapacity: 8 } as const;
@@ -58,7 +59,13 @@ const ready = (async () => {
   const sqlite3 = await sqlite3InitModule();
   pool = await installPool(sqlite3);
   await openDb();
-  return createRpcServer({ adapter: () => adapter, resetStorage, storage: 'opfs-sahpool', isSuperseded: gate.isSuperseded });
+  return createRpcServer({
+    adapter: () => adapter,
+    resetStorage,
+    storage: 'opfs-sahpool',
+    isSuperseded: gate.isSuperseded,
+    urlFor: (item) => registry.get(item.platform)?.canonicalUrl(item),
+  });
 })();
 ready.catch(() => { /* reported per request below */ });
 

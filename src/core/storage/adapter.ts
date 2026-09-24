@@ -6,6 +6,7 @@
 
 import type { SearchStore } from '../search/store';
 import type {
+  AccountRef,
   ExportBundle,
   ParsedBatch,
   ReconcileInput,
@@ -24,6 +25,8 @@ export interface StorageAdapter extends SearchStore {
   upsertBatch(batch: ParsedBatch): Promise<UpsertResult>;
 
   getItem(platform: string, externalId: string): Promise<StoredItem | null>;
+  /** The account the library is bound to for this platform, if any. */
+  getAccount(platform: string): Promise<AccountRef | null>;
   listCollections(): Promise<StoredCollection[]>;
   stats(): Promise<StorageStats>;
 

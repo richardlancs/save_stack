@@ -99,4 +99,16 @@ CREATE VIRTUAL TABLE items_fts USING fts5 (
 );
 `,
   },
+  {
+    version: 2,
+    name: 'meta',
+    sql: `
+-- Scroganize schema v2 (M3 review). Key/value metadata. Currently holds the account binding ("account.<platform>"), so the binding
+-- lives in the same database, and the same transactions, as the data it protects: wipe and import clear or restore it atomically.
+CREATE TABLE meta (
+  key   TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+) WITHOUT ROWID;
+`,
+  },
 ];

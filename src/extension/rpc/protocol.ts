@@ -6,6 +6,7 @@
 // See docs/UI_CONTRACT.md.
 
 import type {
+  AccountRef,
   ExportBundle,
   ParsedBatch,
   ReconcileInput,
@@ -15,6 +16,9 @@ import type {
   StoredItem,
   UpsertResult,
 } from '../../core/model';
+import type { Settings } from '../../core/settings';
+import type { SyncState } from '../../core/sync/types';
+import type { CaptureStatus } from '../../platforms/capture-protocol';
 import type {
   ChipInfoRequest,
   ChipInfoResponse,
@@ -31,6 +35,8 @@ export type RpcErrorCode =
   | 'BAD_REQUEST' //     malformed envelope or params
   | 'NOT_IMPLEMENTED' // declared in the contract, arrives in a later milestone
   | 'SUPERSEDED' //      a newer search replaced this one before it ran; ignore the result
+  | 'BUSY' //            a sync is already running
+  | 'ACCOUNT_MISMATCH' // the library belongs to a different signed-in account (wipe it to switch)
   | 'UNAVAILABLE' //     the database owner is not reachable / failed to start
   | 'INTERNAL'; //       the operation failed
 
@@ -44,11 +50,6 @@ export interface SyncOptions {
   mode?: 'incremental' | 'full';
 }
 
-export interface Settings {
-  /** Reserved. Nothing is configurable in v1 yet. */
-  [key: string]: unknown;
-}
-
 type Void = void;
 
 /** Every method: its parameters and its result. */
@@ -58,6 +59,8 @@ export interface Methods {
   getStats: { params: Void; result: StorageStats };
   getCollections: { params: Void; result: StoredCollection[] };
   getItem: { params: { platform: string; externalId: string }; result: StoredItem | null };
+  /** The account the library is bound to on this platform (null until the first capture). */
+  getAccount: { params: { platform: string }; result: AccountRef | null };
   exportData: { params: Void; result: ExportBundle };
   importData: { params: ExportBundle; result: null };
   /** Deletes every row AND reclaims the storage file. */
@@ -72,21 +75,36 @@ export interface Methods {
   getChipInfo: { params: ChipInfoRequest; result: ChipInfoResponse };
   explainMatch: { params: ExplainRequest; result: ExplainResponse };
 
+  // ---- capture (M3). Answered by the service worker, not the database: what the page hook has captured so far and whether the platform's format drifted.
+  getCaptureStatus: { params: Void; result: CaptureStatus };
+
   // ---- declared now, implemented later (calls return NOT_IMPLEMENTED until then)
-  startSync: { params: SyncOptions; result: null }; //                            M4
-  pauseSync: { params: Void; result: null }; //                                   M4
-  resumeSync: { params: Void; result: null }; //                                  M4
-  cancelSync: { params: Void; result: null }; //                                  M4
-  getSettings: { params: Void; result: Settings }; //                             M6
-  setSettings: { params: Settings; result: Settings }; //                         M6
+  // ---- sync (M4). Answered by the service worker. Every call returns the sync state after it; `getSyncStatus` reads it any time,
+  // and the service worker also broadcasts it to extension pages as a SyncProgressMessage whenever it changes.
+  startSync: { params: SyncOptions; result: SyncState }; //                       BUSY if a sync is already running
+  pauseSync: { params: Void; result: SyncState };
+  resumeSync: { params: Void; result: SyncState };
+  cancelSync: { params: Void; result: SyncState };
+  getSyncStatus: { params: Void; result: SyncState };
+  // ---- settings (M6). Answered by the service worker; a patch of known keys, unknown or invalid values ignored. Returns the full settings.
+  getSettings: { params: Void; result: Settings };
+  setSettings: { params: Partial<Settings>; result: Settings };
 }
 
 export type MethodName = keyof Methods;
 
-export const IMPLEMENTED_METHODS = [
-  'ping', 'getStats', 'getCollections', 'getItem', 'exportData', 'importData', 'wipeData', 'upsertBatch', 'reconcile',
+/** Handled inside the database owner (the DB Worker). */
+export const WORKER_METHODS = [
+  'ping', 'getStats', 'getCollections', 'getItem', 'getAccount', 'exportData', 'importData', 'wipeData', 'upsertBatch', 'reconcile',
   'search', 'getChipInfo', 'explainMatch',
 ] as const satisfies readonly MethodName[];
+export type WorkerMethod = (typeof WORKER_METHODS)[number];
+
+/** Handled by the service worker itself (state that lives outside the database). */
+export const SERVICE_WORKER_METHODS = ['getCaptureStatus', 'startSync', 'pauseSync', 'resumeSync', 'cancelSync', 'getSyncStatus', 'getSettings', 'setSettings'] as const satisfies readonly MethodName[];
+export type ServiceWorkerMethod = (typeof SERVICE_WORKER_METHODS)[number];
+
+export const IMPLEMENTED_METHODS = [...WORKER_METHODS, ...SERVICE_WORKER_METHODS] as const satisfies readonly MethodName[];
 export type ImplementedMethod = (typeof IMPLEMENTED_METHODS)[number];
 
 export interface RpcRequest<M extends MethodName = MethodName> {
@@ -106,4 +124,10 @@ export type RpcResponse<M extends MethodName = MethodName> =
 export interface RuntimeMessage {
   target: 'db' | 'offscreen';
   request: RpcRequest;
+}
+
+/** Broadcast by the service worker (chrome.runtime.sendMessage) to extension pages whenever the sync state changes. */
+export interface SyncProgressMessage {
+  target: 'sync-progress';
+  state: SyncState;
 }

@@ -1,0 +1,59 @@
+# Continuous integration. NOTE: this workflow could not be run in the environment where it was written (no GitHub runner);
+# it mirrors `npm run gate` step by step, which was run locally. Fix it here if a step needs runner-specific setup.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck and unit tests
+        run: |
+          npm run typecheck
+          npm test
+
+      - name: Production build and build check (permissions, CSP, content scripts, no test hooks, size)
+        run: |
+          npm run build
+          npm run check:build
+
+      - name: Install a Chromium for the end-to-end runs
+        run: npx playwright install --with-deps chromium
+
+      # The end-to-end runs are hermetic: a local HTTPS mock of the platform, and a browser that resolves nothing else.
+      # (Chromium runs headless here; a virtual display is not needed.)
+      - name: End-to-end (real extension in Chromium against the mock)
+        run: |
+          npm run e2e:storage
+          npx tsx e2e/capture.ts
+          npx tsx e2e/sync.ts
+          npx tsx e2e/panel.ts
+
+      # Performance budgets are recorded, not blocking: shared CI machines are too noisy for a hard 50 ms line. Compare with docs/SEARCH_PERFORMANCE.md.
+      - name: Benchmarks (reported, not blocking)
+        continue-on-error: true
+        run: |
+          npm run bench:ingest
+          npm run bench:search
+
+      - name: Screenshots and logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-artifacts
+          path: docs/screenshots
+          if-no-files-found: ignore

@@ -21,7 +21,7 @@ async function setup() {
 describe('RPC', () => {
   it('ping reports versions and storage', async () => {
     const { client } = await setup();
-    expect(await client.ping()).toEqual({ pong: true, rpcVersion: RPC_VERSION, schemaVersion: 1, storage: 'memory' });
+    expect(await client.ping()).toEqual({ pong: true, rpcVersion: RPC_VERSION, schemaVersion: 2, storage: 'memory' });
   });
 
   it('upsertBatch -> getStats / getCollections / getItem, all through JSON', async () => {
@@ -47,14 +47,10 @@ describe('RPC', () => {
     expect(await client.getStats()).toMatchObject({ items: 4, availableItems: 2 });
   });
 
-  it('methods declared for later milestones answer NOT_IMPLEMENTED with the milestone', async () => {
+  it('methods answered by the service worker are refused by the database owner (they never reach it in the product)', async () => {
     const { client } = await setup();
-    for (const [call, milestone] of [
-      [() => client.startSync(), 'M4'],
-      [() => client.pauseSync(), 'M4'],
-      [() => client.getSettings(), 'M6'],
-    ] as const) {
-      await expect(call()).rejects.toMatchObject({ name: 'RpcCallError', code: 'NOT_IMPLEMENTED', message: expect.stringContaining(milestone) });
+    for (const call of [() => client.startSync(), () => client.pauseSync(), () => client.resumeSync(), () => client.cancelSync(), () => client.getSyncStatus(), () => client.getCaptureStatus(), () => client.getSettings(), () => client.setSettings({})]) {
+      await expect(call()).rejects.toMatchObject({ name: 'RpcCallError', code: 'BAD_REQUEST', message: expect.stringContaining('service worker') });
     }
   });
 

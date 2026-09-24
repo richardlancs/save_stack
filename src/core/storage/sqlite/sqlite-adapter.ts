@@ -16,6 +16,7 @@ import {
   toIntOrNull,
 } from '../../ingest/normalize';
 import type {
+  AccountRef,
   Collection,
   ExportBundle,
   Membership,
@@ -31,6 +32,7 @@ import type {
 } from '../../model';
 import type { ChipPlan, SearchPlan } from '../../search/planner';
 import type { StorageAdapter } from '../adapter';
+import { AccountMismatchError, matchAccount, parseAccountRef } from '../../ingest/account';
 import { migrate, schemaVersion } from './migrate';
 import { rowToItem } from './rows';
 import { SqliteSearch } from './search';
@@ -132,6 +134,29 @@ export class SqliteAdapter implements StorageAdapter {
     return { ...rowToItem(row, hashtags), id, collections };
   }
 
+  async getAccount(platform: string): Promise<AccountRef | null> {
+    const row = this.first('SELECT value FROM meta WHERE key = ?1', [`account.${platform}`]);
+    return row ? this.readAccount(row[0]) ?? null : null;
+  }
+
+  private readAccount(value: unknown): AccountRef | undefined {
+    try { return parseAccountRef(JSON.parse(String(value))); } catch { return undefined; }
+  }
+
+  /** Bind the library to `a` on first use; refuse a different account; follow a rename. Runs inside the batch's transaction. */
+  private bindAccount(a: AccountRef): void {
+    const bound0 = parseAccountRef(a);
+    if (!bound0) throw new Error('upsertBatch: malformed account');
+    const k = `account.${bound0.platform}`;
+    const row = this.first('SELECT value FROM meta WHERE key = ?1', [k]);
+    if (!row) { this.run('INSERT INTO meta (key, value) VALUES (?1, ?2)', [k, JSON.stringify(bound0)]); return; }
+    const bound = this.readAccount(row[0]);
+    if (!bound) throw new Error('the stored account binding is unreadable; refusing to write rather than risk mixing accounts');
+    const m = matchAccount(bound, bound0);
+    if (m === 'different') throw new AccountMismatchError(bound);
+    if (m === 'renamed' || m === 'upgraded') this.run('UPDATE meta SET value = ?1 WHERE key = ?2', [JSON.stringify({ ...bound, ...bound0 }), k]);
+  }
+
   async listCollections(): Promise<StoredCollection[]> {
     return this.db.selectObjects('SELECT * FROM collections ORDER BY name').map((r) => ({
       platform: String(r.platform),
@@ -177,7 +202,8 @@ export class SqliteAdapter implements StorageAdapter {
          FROM item_collections ic JOIN items i ON i.id = ic.item_id JOIN collections c ON c.id = ic.collection_id
         ORDER BY i.id, c.id`,
     ).map((m) => ({ platform: String(m.platform), itemExternalId: String(m.itemExternalId), collectionExternalId: String(m.collectionExternalId), position: Number(m.position) }));
-    return { format: 'scroganize-export', version: 1, schemaVersion: schemaVersion(this.db), exportedAt: this.now(), items, collections, memberships };
+    const accounts = this.db.selectValues("SELECT value FROM meta WHERE key LIKE 'account.%' ORDER BY key").map((v) => this.readAccount(v)).filter((a): a is AccountRef => a !== undefined);
+    return { format: 'scroganize-export', version: 1, schemaVersion: schemaVersion(this.db), exportedAt: this.now(), items, collections, memberships, ...(accounts.length > 0 ? { accounts } : {}) };
   }
 
   async importAll(bundle: ExportBundle): Promise<void> {
@@ -190,6 +216,10 @@ export class SqliteAdapter implements StorageAdapter {
   private importSync(bundle: ExportBundle): void {
     this.db.transaction(() => {
       this.wipeSync();
+      for (const a of bundle.accounts ?? []) {
+        const ref = parseAccountRef(a);
+        if (ref) this.run('INSERT OR REPLACE INTO meta (key, value) VALUES (?1, ?2)', [`account.${ref.platform}`, JSON.stringify(ref)]);
+      }
       const collIds = new Map<string, number>();
       for (const c of bundle.collections) {
         const id = this.insertCollection(c, null);
@@ -235,6 +265,7 @@ export class SqliteAdapter implements StorageAdapter {
   private upsertSync(batch: ParsedBatch): UpsertResult {
     const syncedAt = batch.syncedAt ?? this.now();
     const result: UpsertResult = { inserted: 0, reindexed: 0, touched: 0, membershipsWritten: 0, skippedMemberships: 0 };
+    if (batch.account !== undefined) this.bindAccount(batch.account); // first: a refused account must not have written anything
 
     // ---- 1. collections (create / rename / refresh declared total)
     const collIds = new Map<string, number>();
@@ -252,15 +283,20 @@ export class SqliteAdapter implements StorageAdapter {
     }
 
     // ---- 2. items (rows + hashtags only; full-text is written after memberships)
+    // New saves at the head of the list, in a library that already has an established ordering, are dated by first sight (see ParsedBatch.headOfList).
+    let newAtHead = 0;
+    const dateByFirstSight = batch.headOfList === true && batch.items.length > 0 && Number(this.db.selectValue("SELECT EXISTS (SELECT 1 FROM items WHERE platform = ?1 AND saved_at_source IN ('interpolated', 'first_seen', 'exact'))", [batch.items[0]!.platform])) === 1;
     const itemIds = new Map<string, number>();
     const ftsQueue: Array<{ id: number; item: SavedItem; tags: string[]; isNew: boolean }> = [];
     for (const it of batch.items) {
       const tags = normalizeHashtags(it.hashtags);
       const hash = contentHash(it, tags);
-      const existing = this.first('SELECT id, content_hash, saved_at_source FROM items WHERE platform = ?1 AND external_id = ?2', [it.platform, it.externalId]);
+      const existing = this.first('SELECT id, content_hash, saved_at_source, caption, author_handle, author_name, sound_title, sound_author FROM items WHERE platform = ?1 AND external_id = ?2', [it.platform, it.externalId]);
       if (!existing) {
-        const source: SavedAtSource = it.savedAt != null ? it.savedAtSource ?? 'unknown' : 'first_seen';
-        const id = this.insertItemRow(it, tags, { syncedAt, firstSeenAt: syncedAt, lastSeenAt: syncedAt, savedAt: it.savedAt ?? syncedAt, savedAtSource: source, available: true }, hash);
+        let source: SavedAtSource = it.savedAt != null ? it.savedAtSource ?? 'unknown' : 'first_seen';
+        let savedAt = it.savedAt ?? syncedAt;
+        if (dateByFirstSight) { newAtHead++; savedAt = syncedAt - newAtHead * 1000; source = 'first_seen'; } // newest first: 1 s, 2 s, ... before the sync
+        const id = this.insertItemRow(it, tags, { syncedAt, firstSeenAt: syncedAt, lastSeenAt: syncedAt, savedAt, savedAtSource: source, available: true }, hash);
         itemIds.set(key(it.platform, it.externalId), id);
         ftsQueue.push({ id, item: it, tags, isNew: true });
         result.inserted++;
@@ -270,16 +306,33 @@ export class SqliteAdapter implements StorageAdapter {
       itemIds.set(key(it.platform, it.externalId), id);
       const better = it.savedAt != null && isBetterSavedAt(existing[2] as SavedAtSource, it.savedAtSource ?? 'unknown');
       this.updateItemStats(id, it, syncedAt, better);
-      if (String(existing[1]) === hash) {
+      // A record that does not provide a text field (a stub, a changed response shape) must not blank what is already stored:
+      // "not provided" keeps the stored value, an explicit empty string replaces it.
+      const str = (v: unknown): string | undefined => (v === null || v === undefined || v === '' ? undefined : String(v));
+      const merged: SavedItem = {
+        ...it,
+        caption: it.caption ?? String(existing[3] ?? ''),
+        authorHandle: it.authorHandle ? it.authorHandle : String(existing[4] ?? ''),
+        authorName: it.authorName ?? str(existing[5]),
+        soundTitle: it.soundTitle ?? str(existing[6]),
+        soundAuthor: it.soundAuthor ?? str(existing[7]),
+      };
+      const mergedTags = it.hashtags === undefined
+        ? this.db.selectValues('SELECT h.tag FROM item_hashtags ih JOIN hashtags h ON h.id = ih.hashtag_id WHERE ih.item_id = ?1 ORDER BY h.tag', [id]).map(String)
+        : tags;
+      const mergedHash = contentHash(merged, mergedTags);
+      if (String(existing[1]) === mergedHash) {
         result.touched++;
       } else {
         this.run(
           'UPDATE items SET caption = ?1, author_handle = ?2, author_name = ?3, sound_title = ?4, sound_author = ?5, content_hash = ?6 WHERE id = ?7',
-          [it.caption ?? '', it.authorHandle ?? '', textOrNull(it.authorName), textOrNull(it.soundTitle), textOrNull(it.soundAuthor), hash, id],
+          [merged.caption ?? '', merged.authorHandle ?? '', textOrNull(merged.authorName), textOrNull(merged.soundTitle), textOrNull(merged.soundAuthor), mergedHash, id],
         );
-        this.run('DELETE FROM item_hashtags WHERE item_id = ?1', [id]);
-        for (const t of tags) this.run('INSERT OR IGNORE INTO item_hashtags (item_id, hashtag_id) VALUES (?1, ?2)', [id, this.tagId(t)]);
-        ftsQueue.push({ id, item: it, tags, isNew: false });
+        if (it.hashtags !== undefined) {
+          this.run('DELETE FROM item_hashtags WHERE item_id = ?1', [id]);
+          for (const t of tags) this.run('INSERT OR IGNORE INTO item_hashtags (item_id, hashtag_id) VALUES (?1, ?2)', [id, this.tagId(t)]);
+        }
+        ftsQueue.push({ id, item: merged, tags: mergedTags, isNew: false });
         result.reindexed++;
       }
     }
@@ -452,7 +505,7 @@ export class SqliteAdapter implements StorageAdapter {
   }
 
   private wipeSync(): void {
-    for (const t of ['item_hashtags', 'item_collections', 'items_fts', 'items', 'hashtags', 'collections']) this.db.exec(`DELETE FROM ${t}`);
+    for (const t of ['item_hashtags', 'item_collections', 'items_fts', 'items', 'hashtags', 'collections', 'meta']) this.db.exec(`DELETE FROM ${t}`);
     this.tagIds.clear();
   }
 }

@@ -10,6 +10,7 @@ import type {
   SearchResponse,
 } from '../../core/search/types';
 import type { ExportBundle, ParsedBatch, ReconcileInput } from '../../core/model';
+import type { Settings } from '../../core/settings';
 import {
   RPC_VERSION,
   type MethodName,
@@ -17,7 +18,6 @@ import {
   type RpcErrorCode,
   type RpcRequest,
   type RpcResponse,
-  type Settings,
   type SyncOptions,
 } from './protocol';
 
@@ -57,6 +57,7 @@ export function createClient(send: Transport) {
     getStats: () => call('getStats'),
     getCollections: () => call('getCollections'),
     getItem: (platform: string, externalId: string) => call('getItem', { platform, externalId }),
+    getAccount: (platform: string) => call('getAccount', { platform }),
     exportData: () => call('exportData'),
     importData: (bundle: ExportBundle) => call('importData', bundle),
     wipeData: () => call('wipeData'),
@@ -64,14 +65,17 @@ export function createClient(send: Transport) {
     search: (req: SearchRequest): Promise<SearchResponse> => call('search', req),
     getChipInfo: (req: ChipInfoRequest): Promise<ChipInfoResponse> => call('getChipInfo', req),
     explainMatch: (req: ExplainRequest): Promise<ExplainResponse> => call('explainMatch', req),
-    // Sync (M4)
+    // Capture (M3): how many saved posts the page hook has read, and whether the platform changed its format
+    getCaptureStatus: () => call('getCaptureStatus'),
+    // Sync (M4): each returns the sync state after the call. Progress is also pushed as SyncProgressMessage (see protocol.ts).
     startSync: (opts: SyncOptions = {}) => call('startSync', opts),
     pauseSync: () => call('pauseSync'),
     resumeSync: () => call('resumeSync'),
     cancelSync: () => call('cancelSync'),
+    getSyncStatus: () => call('getSyncStatus'),
     // Settings (M6)
     getSettings: () => call('getSettings'),
-    setSettings: (s: Settings) => call('setSettings', s),
+    setSettings: (s: Partial<Settings>) => call('setSettings', s),
     // Extension-internal (capture / sync pipeline). UIs should not call these.
     upsertBatch: (batch: ParsedBatch) => call('upsertBatch', batch),
     reconcile: (input: ReconcileInput) => call('reconcile', input),

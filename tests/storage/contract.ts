@@ -223,5 +223,132 @@ export function storageContract(label: string, make: () => Promise<StorageAdapte
       await a.upsertBatch(batch({ items: [item(1)] }));
       expect((await a.getItem('tiktok', 'id1'))!.hashtags).toEqual(['food', 'recipe']);
     });
+
+    // ------------------------------------------------------------------ partial records (M3 review)
+    it('a record that does not provide its text does not blank what is stored ("not provided" keeps, an explicit empty replaces)', async () => {
+      await a.upsertBatch(batch({ items: [item(1, { hashtags: ['food', 'pasta'], authorName: 'Nick', soundTitle: 'Song', soundAuthor: 'Singer' })] }));
+      const before = await a.getItem('tiktok', 'id1');
+      const stub = { ...item(1), caption: undefined, hashtags: undefined, authorHandle: '', authorName: undefined, soundTitle: undefined, soundAuthor: undefined, stats: { views: 999 } };
+      const r = await a.upsertBatch(batch({ items: [stub] }, T0 + 1));
+      expect(r).toMatchObject({ inserted: 0, reindexed: 0, touched: 1 }); // nothing about the text changed
+      const after = await a.getItem('tiktok', 'id1');
+      expect(after).toMatchObject({ caption: before!.caption, authorHandle: before!.authorHandle, authorName: 'Nick', soundTitle: 'Song', soundAuthor: 'Singer', hashtags: ['food', 'pasta'] });
+      expect(after!.stats!.views).toBe(999); // what WAS provided still applies
+    });
+
+    it('an explicitly empty caption (and empty hashtag list) is a real change and replaces the text', async () => {
+      await a.upsertBatch(batch({ items: [item(1, { hashtags: ['food'] })] }));
+      const r = await a.upsertBatch(batch({ items: [{ ...item(1), caption: '', hashtags: [] }] }, T0 + 1));
+      expect(r.reindexed).toBe(1);
+      expect(await a.getItem('tiktok', 'id1')).toMatchObject({ caption: '', hashtags: [] });
+    });
+
+    it('a record that fills in a field that was missing before updates just that field', async () => {
+      await a.upsertBatch(batch({ items: [item(1, { soundTitle: undefined, soundAuthor: undefined })] }));
+      const r = await a.upsertBatch(batch({ items: [item(1, { soundTitle: 'New song', soundAuthor: 'X' })] }, T0 + 1));
+      expect(r.reindexed).toBe(1);
+      expect(await a.getItem('tiktok', 'id1')).toMatchObject({ soundTitle: 'New song', caption: 'caption 1 #Food' });
+    });
+
+    // ------------------------------------------------------------------ the account binding (M3 review)
+    const acct = (handle: string, id?: string) => ({ platform: 'tiktok', handle, ...(id !== undefined ? { id } : {}) });
+
+    it('binds the library to the first account and stores the binding with the data', async () => {
+      expect(await a.getAccount('tiktok')).toBeNull();
+      await a.upsertBatch({ ...batch({ items: [item(1)] }), account: acct('Alice', '111') });
+      expect(await a.getAccount('tiktok')).toEqual({ platform: 'tiktok', handle: 'Alice', id: '111' });
+      expect(await a.getAccount('instagram')).toBeNull(); // per platform
+    });
+
+    it('refuses a different account atomically: the batch writes nothing', async () => {
+      await a.upsertBatch({ ...batch({ items: [item(1)] }), account: acct('alice', '111') });
+      const before = await a.stats();
+      await expect(a.upsertBatch({ ...batch({ items: [item(2), item(3)], collections: [coll(1, 'X')] }), account: acct('bob', '222') })).rejects.toMatchObject({ name: 'AccountMismatchError' });
+      await expect(a.upsertBatch({ ...batch({ items: [item(4)] }), account: acct('bob') })).rejects.toMatchObject({ name: 'AccountMismatchError' }); // no id: handles decide
+      expect(await a.stats()).toEqual(before);
+      expect(await a.getItem('tiktok', 'id2')).toBeNull();
+      expect(await a.getAccount('tiktok')).toMatchObject({ handle: 'alice' });
+    });
+
+    it('accepts the same account (case-insensitive) and a batch with no account is not restricted', async () => {
+      await a.upsertBatch({ ...batch({ items: [item(1)] }), account: acct('Alice') });
+      await expect(a.upsertBatch({ ...batch({ items: [item(2)] }), account: acct('ALICE') })).resolves.toMatchObject({ inserted: 1 });
+      await expect(a.upsertBatch(batch({ items: [item(3)] }))).resolves.toMatchObject({ inserted: 1 });
+    });
+
+    it('follows a username change when the stable id matches, and gains an id it did not have', async () => {
+      await a.upsertBatch({ ...batch({ items: [item(1)] }), account: acct('oldname') });
+      await a.upsertBatch({ ...batch({ items: [item(2)] }), account: acct('oldname', '111') }); // upgraded
+      expect(await a.getAccount('tiktok')).toEqual({ platform: 'tiktok', handle: 'oldname', id: '111' });
+      await expect(a.upsertBatch({ ...batch({ items: [item(3)] }), account: acct('newname', '111') })).resolves.toMatchObject({ inserted: 1 }); // renamed, same person
+      expect(await a.getAccount('tiktok')).toEqual({ platform: 'tiktok', handle: 'newname', id: '111' });
+      await expect(a.upsertBatch({ ...batch({ items: [item(4)] }), account: acct('oldname', '999') })).rejects.toMatchObject({ name: 'AccountMismatchError' }); // someone else who took the old name
+    });
+
+    it('rejects a malformed account instead of binding to it', async () => {
+      for (const bad of [{ platform: 'tiktok', handle: '' }, { platform: 'TikTok', handle: 'a' }, { platform: 'tiktok', handle: 'a b' }, { platform: 'tiktok', handle: 'a', id: 'x' }, null, 5]) {
+        await expect(a.upsertBatch({ ...batch({ items: [item(1)] }), account: bad as never })).rejects.toThrow(/malformed account/);
+      }
+      expect(await a.getAccount('tiktok')).toBeNull();
+      expect((await a.stats()).items).toBe(0);
+    });
+
+    it('wipe clears the binding together with the data, so another account can then be used', async () => {
+      await a.upsertBatch({ ...batch({ items: [item(1)] }), account: acct('alice', '111') });
+      await a.wipe();
+      expect(await a.getAccount('tiktok')).toBeNull();
+      await expect(a.upsertBatch({ ...batch({ items: [item(2)] }), account: acct('bob', '222') })).resolves.toMatchObject({ inserted: 1 });
+    });
+
+    it('export carries the binding and import restores it; importing an older bundle without one clears it', async () => {
+      await a.upsertBatch({ ...batch({ items: items(1, 3) }), account: acct('alice', '111') });
+      const bundle = await a.exportAll();
+      expect(bundle.accounts).toEqual([{ platform: 'tiktok', handle: 'alice', id: '111' }]);
+      const b = await make();
+      try {
+        await b.importAll(JSON.parse(JSON.stringify(bundle)) as ExportBundle);
+        expect(await b.getAccount('tiktok')).toEqual({ platform: 'tiktok', handle: 'alice', id: '111' });
+        await expect(b.upsertBatch({ ...batch({ items: [item(9)] }), account: acct('bob', '222') })).rejects.toMatchObject({ name: 'AccountMismatchError' });
+        const { accounts: _dropped, ...legacy } = bundle;
+        await b.importAll(legacy as ExportBundle);
+        expect(await b.getAccount('tiktok')).toBeNull();
+      } finally { await b.close(); }
+    });
+
+    it('an import with junk in the accounts list ignores the junk', async () => {
+      const bundle = await a.exportAll();
+      await a.importAll({ ...bundle, accounts: [{ platform: 'tiktok', handle: '<script>' }, 5, null] as never });
+      expect(await a.getAccount('tiktok')).toBeNull();
+    });
+
+    // ------------------------------------------------------------------ dating new saves at the head of the list (found by the sync e2e)
+    const at = (n: number, savedAt: number, source: 'interpolated' | 'unknown' = 'interpolated') => item(n, { savedAt, savedAtSource: source });
+
+    it('the first import keeps its page-boundary estimates, even when it is the head of the list', async () => {
+      await a.upsertBatch({ ...batch({ items: [at(1, T0 - 10_000), at(2, T0 - 20_000)] }), headOfList: true });
+      expect(await a.getItem('tiktok', 'id1')).toMatchObject({ savedAt: T0 - 10_000, savedAtSource: 'interpolated' });
+    });
+
+    it('new saves at the head of an established library are dated by first sight, newest first, and file above everything older', async () => {
+      await a.upsertBatch(batch({ items: [at(1, T0 - 50 * DAY), at(2, T0 - 60 * DAY)] }));
+      await a.upsertBatch({ ...batch({ items: [at(10, T0 - 100 * DAY), at(11, T0 - 101 * DAY), at(1, T0 - 99 * DAY)] }, T0 + DAY), headOfList: true });
+      const n10 = await a.getItem('tiktok', 'id10'); const n11 = await a.getItem('tiktok', 'id11');
+      expect(n10).toMatchObject({ savedAt: T0 + DAY - 1000, savedAtSource: 'first_seen' });
+      expect(n11).toMatchObject({ savedAt: T0 + DAY - 2000, savedAtSource: 'first_seen' });
+      expect(n10!.savedAt).toBeGreaterThan((await a.getItem('tiktok', 'id1'))!.savedAt);
+      expect(await a.getItem('tiktok', 'id1')).toMatchObject({ savedAt: T0 - 50 * DAY, savedAtSource: 'interpolated' }); // the known one is untouched
+    });
+
+    it('videos that are not at the head of the list keep their estimates', async () => {
+      await a.upsertBatch(batch({ items: [at(1, T0 - 50 * DAY)] }));
+      await a.upsertBatch(batch({ items: [at(20, T0 - 200 * DAY)] }, T0 + DAY)); // a later page of the list: not headOfList
+      expect(await a.getItem('tiktok', 'id20')).toMatchObject({ savedAt: T0 - 200 * DAY, savedAtSource: 'interpolated' });
+    });
+
+    it('a library that only knows collection order (no dated saves) is not "established"', async () => {
+      await a.upsertBatch(batch({ items: [at(1, T0, 'unknown')] }));
+      await a.upsertBatch({ ...batch({ items: [at(2, T0 - DAY)] }, T0 + DAY), headOfList: true });
+      expect(await a.getItem('tiktok', 'id2')).toMatchObject({ savedAt: T0 - DAY, savedAtSource: 'interpolated' });
+    });
   });
 }

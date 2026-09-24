@@ -16,6 +16,7 @@ import sqlite3InitModule from '@sqlite.org/sqlite-wasm';
 import { SearchService } from '../src/core/search/service';
 import { applyPragmas } from '../src/core/storage/sqlite/migrate';
 import { SqliteAdapter } from '../src/core/storage/sqlite/sqlite-adapter';
+import { profileMemory } from './process-memory';
 import { synthBatches, synthLibrary } from './synth-batches';
 
 const ITEMS = Number(process.env.ITEMS ?? 50_000);
@@ -44,7 +45,8 @@ async function launch(): Promise<{ ctx: BrowserContext; sw: Worker }> {
   const ctx = await chromium.launchPersistentContext(profile, {
     channel: 'chromium',
     headless: true,
-    args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`],
+    // no network at all: this run only needs the extension itself
+    args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`, '--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1'],
   });
   let sw = ctx.serviceWorkers()[0];
   if (!sw) sw = await ctx.waitForEvent('serviceworker', { timeout: 30_000 });
@@ -123,6 +125,12 @@ try {
   console.log(`      offscreen document destroyed -> next call answered after ${ms(t)} ms (recreated, handles re-acquired, DB reopened)`);
   check(recovered.items === ITEMS, 'RPC recovers after the offscreen document is destroyed, with data intact');
 
+  // ---------------------------------------------------------------- idle memory (reported, not budgeted)
+  await new Promise((r) => setTimeout(r, 3000));
+  const mem = profileMemory(profile);
+  if (mem) console.log(`      idle memory with ${ITEMS} videos stored: ${mem.totalMB} MB working set over ${mem.processes} browser processes; renderers (the offscreen document holds the database) ${mem.renderersMB.slice(0, 4).join(', ')} MB, largest first`);
+  else console.log('      idle memory: not available on this machine');
+
   // ---------------------------------------------------------------- search through the real extension, checked against the in-memory engine
   {
     const sqlite3 = await sqlite3InitModule();
@@ -182,8 +190,8 @@ try {
   // ---------------------------------------------------------------- bad input over the real path
   const bad = await sw.evaluate((r) => (globalThis as any).__scroganize.forward(r), { v: 1, id: 'bad-1', method: 'dropTables', params: null });
   check(bad.ok === false && bad.error.code === 'BAD_REQUEST', 'an unknown method is rejected with BAD_REQUEST');
-  const ni = await sw.evaluate((r) => (globalThis as any).__scroganize.forward(r), { v: 1, id: 'ni-1', method: 'startSync', params: {} });
-  check(ni.ok === false && ni.error.code === 'NOT_IMPLEMENTED', 'startSync answers NOT_IMPLEMENTED until M4');
+  const ni = await sw.evaluate((r) => (globalThis as any).__scroganize.forward(r), { v: 1, id: 'ni-1', method: 'getSettings', params: {} });
+  check(ni.ok === false && ni.error.code === 'BAD_REQUEST' && /service worker/.test(ni.error.message), 'a service-worker-only method sent straight to the database is rejected with BAD_REQUEST');
   const badChip = await sw.evaluate((r) => (globalThis as any).__scroganize.forward(r), { v: 1, id: 'bc-1', method: 'search', params: { requestId: 'bc', chips: [{ id: 'x', text: '   ' }] } });
   check(badChip.ok === false && badChip.error.code === 'BAD_REQUEST', 'a search with an empty chip is rejected with BAD_REQUEST');
 

@@ -2,6 +2,7 @@
 // SearchStore, and owns the product rules that are not SQL: suggested chips, did-you-mean, safe highlighting.
 // No chrome.*, no DOM, no SQL.
 
+import type { StoredItem } from '../model';
 import { MAX_CHIPS, SearchInputError, normalizeChip, normalizeChips, tokenize, type NormalizedChip } from './chips';
 import { defaultExpander, type TermExpander } from './expander';
 import { planChip, planSearch, relatedCap, type ChipPlan, type SearchPlan } from './planner';
@@ -52,7 +53,13 @@ export class SearchService {
     private readonly store: SearchStore,
     private readonly expander: TermExpander = defaultExpander,
     private readonly clock: () => number = () => performance.now(),
+    /** Builds the link back to a post (the platform adapter's job). A failure here must never fail a search. */
+    private readonly urlFor?: (item: StoredItem) => string | undefined,
   ) {}
+
+  private linkFor(item: StoredItem): string | undefined {
+    try { return this.urlFor?.(item); } catch { return undefined; }
+  }
 
   /** The fast path: results, capped total, suggested chips. Per-chip counts and "why matched" are separate calls. */
   async search(req: SearchRequest): Promise<SearchResponse> {
@@ -66,7 +73,10 @@ export class SearchService {
     const results: ResultItem[] = [];
     found.ids.forEach((id, i) => {
       const item = byId.get(id);
-      if (item) results.push({ item, snippet: buildSnippet(item.caption ?? "", terms), score: round(found.scores[i] ?? 0) });
+      if (item) {
+        const url = this.linkFor(item);
+        results.push({ item, snippet: buildSnippet(item.caption ?? "", terms), score: round(found.scores[i] ?? 0), ...(url !== undefined ? { url } : {}) });
+      }
     });
     // suggestions describe the whole result set, so only the first page carries them
     const suggestedChips = plan.cursor || found.candidateIds.length === 0 ? [] : this.suggest(await this.store.facetCandidates(found.candidateIds), plan, found.candidateIds.length);

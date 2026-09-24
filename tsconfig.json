@@ -8,11 +8,14 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
   },
   "include": [
     "src",
     "bench",
+    "e2e",
     "tests",
     "wxt.config.ts",
     ".wxt/wxt.d.ts"

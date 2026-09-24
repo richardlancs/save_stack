@@ -11,13 +11,16 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "spike": "echo 'The M0 spike was retired in M1. Reproduce it with: git checkout m0-spike' && exit 1",
-    "fixtures:tiktok": "node scripts/make-tiktok-fixtures.mjs",
+    "fixtures:tiktok": "tsx scripts/make-tiktok-fixtures.ts",
     "bench:ingest": "tsx bench/ingest.ts",
     "build:e2e": "cross-env WXT_E2E_HOOKS=1 wxt build",
     "e2e:storage": "npm run build:e2e && tsx bench/run-ingest.ts",
+    "e2e:capture": "npm run build:e2e && tsx e2e/capture.ts",
+    "e2e:sync": "npm run build:e2e && tsx e2e/sync.ts",
+    "e2e:panel": "npm run build:e2e && tsx e2e/panel.ts",
     "bench:search": "tsx bench/search.ts",
     "check:build": "node scripts/check-build.mjs",
-    "gate": "npm run typecheck && npm test && npm run bench:ingest && npm run bench:search && npm run build && npm run check:build && npm run e2e:storage",
+    "gate": "npm run typecheck && npm test && npm run bench:ingest && npm run bench:search && npm run build && npm run check:build && npm run e2e:storage && tsx e2e/capture.ts && tsx e2e/sync.ts && tsx e2e/panel.ts",
     "mutate": "node scripts/mutation-check.mjs"
   },
   "devDependencies": {
@@ -25,12 +28,15 @@
     "@types/node": "^26.6.2",
     "cross-env": "^10.1.0",
     "playwright": "^1.63.0",
+    "preact-render-to-string": "^6.7.0",
+    "selfsigned": "^5.5.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vitest": "^5.0.1",
     "wxt": "^0.21.4"
   },
   "dependencies": {
-    "@sqlite.org/sqlite-wasm": "^3.53.4-build1"
+    "@sqlite.org/sqlite-wasm": "^3.53.4-build1",
+    "preact": "^10.29.8"
   }
 }
