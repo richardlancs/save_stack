@@ -1,37 +1,46 @@
 # Scroganize
 
-Search the videos you saved on social media. Scroganize is a Chrome extension that reads **your own** saved videos and collections (TikTok first), keeps them in a fast local database on your machine, and lets you find them by typing categories such as `food` or `makeup` in a side panel.
+**Find the videos you saved without scrolling through your Favorites.**
 
-- **Local only.** Nothing is uploaded and the extension makes no network requests of its own. The library lives in your browser's private storage.
-- **Category search.** Type a category, press Enter, and it becomes a chip. Add as many as you like and press **Search**. `food` also finds `recipe`, `pasta`, and so on (a bundled, editable related-words list; no AI or network involved). Remove a chip with its ×, and the results only change when you press Search again.
-- **Two ways in.** Just browse your own Favorites and collections on TikTok while signed in and videos appear in the library by themselves, or press **Sync** to have the extension read everything in a separate window at a human pace.
-- **Built to be extended.** Everything TikTok-specific sits behind one adapter interface (`docs/ADDING_A_PLATFORM.md`), and the side panel is a thin, replaceable client of a documented API (`docs/UI_CONTRACT.md`).
+[![CI](https://github.com/richardlancs/save_stack/actions/workflows/ci.yml/badge.svg)](https://github.com/richardlancs/save_stack/actions/workflows/ci.yml)
 
-## Read this first
+Scroganize is a Chrome side-panel extension for searching **your own saved TikTok posts**, including videos and photo posts. It reads your Favorites and collections, keeps a searchable library in your browser, and helps you find a post again by its caption, creator, hashtag, or collection. TikTok is the only supported platform today.
 
-- Scroganize reads **only the signed-in user's own saved data**, locally, at a human-like pace, and only when you press Sync (or browse your own pages yourself). It never reads other people's accounts.
-- **Automated access may conflict with TikTok's Terms of Service.** Scroganize scrolls pages for you when you press Sync. You are responsible for how you use it. It is a personal tool, not a product, and is not affiliated with TikTok.
-- The extension was developed and tested against a **mock** TikTok that reproduces the response shapes observed in a real session. What only your real account can confirm is listed in `docs/LIVE_CHECKLIST.md`. TikTok changes its site without notice; when it does, the panel says "TikTok changed something, so some results may be incomplete" instead of failing silently.
+![Scroganize side panel showing category search and video results](docs/screenshots/panel-results-light.png)
 
-## Getting started
+*The side panel in a Chromium test with sample data. See the [dark theme](docs/screenshots/panel-results-dark.png) and [complete result cards](docs/screenshots/panel-grid-light.png).*
+
+## Highlights
+
+- **Search the way you remember.** Add categories such as `food` or `meal prep`, combine them with **All** or **Any**, and choose whether to include related words. Each result can explain why it matched.
+- **Fill your library your way.** Browse your own Favorites and collections while signed in, or press **Sync** to read them in a separate window. You can pause, resume, or cancel a sync.
+- **Keep control of your data.** The library stays in this browser profile. Export it as JSON, import an export, or wipe it from the side panel. A full re-sync marks videos you have unsaved as **No longer saved** instead of deleting them.
+
+## Get started
+
+You need **Chrome 116 or newer**. To build from this repository, use **Node.js 24** (the version used in CI) and npm:
 
 ```bash
-npm install
-npm run build          # production build in .output/chrome-mv3
+git clone https://github.com/richardlancs/save_stack.git
+cd save_stack
+npm ci
+npm run build
 ```
 
-Chrome: open `chrome://extensions`, turn on **Developer mode**, choose **Load unpacked**, and select `.output/chrome-mv3`. Sign in to TikTok in that browser, click the Scroganize icon to open the side panel, and press **Sync** (or browse your Favorites). Details: `docs/GETTING_STARTED.md`.
+Open `chrome://extensions`, enable **Developer mode**, click **Load unpacked**, and select `.output/chrome-mv3`. Sign in to your own TikTok account in that Chrome profile, then click the Scroganize toolbar icon to open the side panel.
 
-## For developers
+Press **Sync** for a first pass through your Favorites and collections, or browse your own Favorites to add videos as you go. Keep the sync window visible while it runs. To search, type `food`, press **Enter** to make a category chip, then press **Search**. Add more chips to narrow the results; removing one changes the draft until you press **Search** again.
 
-| Command | What it does |
-|---|---|
-| `npm run typecheck` | TypeScript, strict |
-| `npm test` | unit and contract tests (plain Node, real SQLite engine) |
-| `npm run gate` | the full quality gate: typecheck, tests, ingest and search benchmarks, production build, build check, and the end-to-end runs against a mock TikTok in a real Chromium |
-| `npm run mutate` | mutation spot-check: deliberately breaks critical logic and confirms the tests notice |
-| `npm run e2e:storage`, `e2e:capture`, `e2e:sync`, `e2e:panel` | the individual end-to-end runs (hermetic: a local HTTPS mock, no real network) |
-| `npm run check:build` | verifies the built extension (permissions, CSP, content scripts, no test hooks, size) |
-| `npm run dev` | WXT dev mode with reload |
+For a walkthrough of sync, search, settings, and export/import, see [Getting started](docs/GETTING_STARTED.md).
 
-Documentation: `docs/ARCHITECTURE.md` (how it fits together and the trust model), `docs/DECISIONS.md` (every decision and why), `docs/UI_CONTRACT.md` (for building another UI), `docs/ADDING_A_PLATFORM.md`, `docs/SEARCH_PERFORMANCE.md`, `docs/GATES.md` (what was verified at each milestone), `docs/TIKTOK_FINDINGS.md` (what was observed on the real site), `docs/LIVE_CHECKLIST.md`.
+## What to know
+
+- Scroganize reads only the signed-in account's own saved data and does not upload your library. The local library is bound to one account; switching accounts requires wiping it first.
+- The extension has been tested against a local mock of TikTok in Chromium. Its behavior with a real account still needs checking; the [live checklist](docs/LIVE_CHECKLIST.md) shows what to verify. TikTok can change its pages or response format, and old thumbnail links can expire.
+- Sync scrolls TikTok pages for you. Automated access may conflict with TikTok's Terms of Service. Scroganize is an independent personal project and is not affiliated with TikTok.
+
+## Project and development
+
+Scroganize is built by the [repository contributors](https://github.com/richardlancs/save_stack/graphs/contributors). Questions and feedback are welcome in [Issues](https://github.com/richardlancs/save_stack/issues). No license is specified in the repository yet.
+
+Developers can start with the [architecture](docs/ARCHITECTURE.md), [UI contract](docs/UI_CONTRACT.md), and [platform adapter guide](docs/ADDING_A_PLATFORM.md). Run `npm run typecheck`, `npm test`, and `npm run build && npm run check:build` before proposing changes. The [quality gates](docs/GATES.md) describe the broader Chromium tests and benchmarks.
