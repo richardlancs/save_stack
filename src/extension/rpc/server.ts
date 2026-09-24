@@ -1,6 +1,9 @@
 // The RPC server: validates an envelope, dispatches to the StorageAdapter, and maps every outcome (including
 // exceptions) to an RpcResponse. It has no chrome.* dependency, so it is tested in plain Node.
 
+import { SearchInputError } from '../../core/search/chips';
+import { defaultExpander, type TermExpander } from '../../core/search/expander';
+import { SearchService } from '../../core/search/service';
 import type { StorageAdapter } from '../../core/storage/adapter';
 import {
   IMPLEMENTED_METHODS,
@@ -20,6 +23,13 @@ export interface RpcServerDeps {
   resetStorage?: () => Promise<void>;
   /** Reported by ping. */
   storage: string;
+  /** Override the related-terms layer (tests). */
+  expander?: TermExpander;
+  /**
+   * True if a NEWER search has arrived since `requestId` was issued. Checked when the request starts running, so a stale
+   * search queued behind a long operation is dropped instead of wasting the database.
+   */
+  isSuperseded?: (requestId: string) => boolean;
 }
 
 class RpcFailure extends Error {
@@ -35,6 +45,12 @@ const ok = <M extends MethodName>(id: string, result: Methods[M]['result']): Rpc
 const fail = (id: string, code: RpcErrorCode, message: string): RpcResponse => ({ v: RPC_VERSION, id, ok: false, error: { code, message } });
 
 export function createRpcServer(deps: RpcServerDeps): (raw: unknown) => Promise<RpcResponse> {
+  const service = () => new SearchService(deps.adapter(), deps.expander ?? defaultExpander);
+  const notStale = (p: unknown) => {
+    const id = isObject(p) ? p.requestId : undefined;
+    if (typeof id === 'string' && deps.isSuperseded?.(id)) throw new RpcFailure('SUPERSEDED', 'a newer search replaced this one');
+  };
+
   const handlers: { [K in ImplementedMethod]: (params: Methods[K]['params']) => Promise<Methods[K]['result']> } = {
     ping: async () => ({ pong: true, rpcVersion: RPC_VERSION, schemaVersion: (await deps.adapter().stats()).schemaVersion, storage: deps.storage }),
     getStats: () => deps.adapter().stats(),
@@ -58,6 +74,9 @@ export function createRpcServer(deps: RpcServerDeps): (raw: unknown) => Promise<
       need(isObject(p) && Array.isArray(p.items), 'upsertBatch needs { items: [...] }');
       return deps.adapter().upsertBatch(p);
     },
+    search: async (p) => { notStale(p); return service().search(p); },
+    getChipInfo: async (p) => { notStale(p); return service().chipInfo(p); },
+    explainMatch: (p) => service().explain(p),
     reconcile: (p) => {
       need(isObject(p) && typeof p.platform === 'string' && Array.isArray(p.seenExternalIds), 'reconcile needs { platform, seenExternalIds: [...] }');
       return deps.adapter().reconcile(p);
@@ -78,6 +97,7 @@ export function createRpcServer(deps: RpcServerDeps): (raw: unknown) => Promise<
       return ok(id, (await handler((raw as { params?: unknown }).params)) as never);
     } catch (e) {
       if (e instanceof RpcFailure) return fail(id, e.code, e.message);
+      if (e instanceof SearchInputError) return fail(id, 'BAD_REQUEST', e.message);
       return fail(id, 'INTERNAL', e instanceof Error ? e.message : String(e));
     }
   };
@@ -91,7 +111,6 @@ export function createRpcServer(deps: RpcServerDeps): (raw: unknown) => Promise<
 
 /** Declared in the contract, implemented in a later milestone. */
 const NOT_YET: Record<string, string> = {
-  search: 'M2', getChipInfo: 'M2', explainMatch: 'M2',
   startSync: 'M4', pauseSync: 'M4', resumeSync: 'M4', cancelSync: 'M4',
   getSettings: 'M6', setSettings: 'M6',
 };

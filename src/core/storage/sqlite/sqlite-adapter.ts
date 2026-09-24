@@ -29,8 +29,11 @@ import type {
   StoredItem,
   UpsertResult,
 } from '../../model';
+import type { ChipPlan, SearchPlan } from '../../search/planner';
 import type { StorageAdapter } from '../adapter';
 import { migrate, schemaVersion } from './migrate';
+import { rowToItem } from './rows';
+import { SqliteSearch } from './search';
 
 export interface SqliteAdapterOptions {
   /** Injectable clock: defaults to Date.now(). */
@@ -50,6 +53,7 @@ interface ItemMeta {
 }
 
 export class SqliteAdapter implements StorageAdapter {
+  private searchImpl?: SqliteSearch;
   private readonly stmts = new Map<string, PreparedStatement>();
   private readonly tagIds = new Map<string, number>();
   private readonly now: () => number;
@@ -88,6 +92,18 @@ export class SqliteAdapter implements StorageAdapter {
 
   private changes(): number { return Number(this.db.changes()); }
 
+  // ------------------------------------------------------------------ SearchStore (SQL lives in ./search.ts)
+
+  private get search(): SqliteSearch { return (this.searchImpl ??= new SqliteSearch(this.db, () => this.dataVersion)); }
+  /** Bumped by every write, so caches built from the data (search vocabulary) know when they are stale. */
+  private dataVersion = 0;
+  searchQuery(plan: SearchPlan) { return this.search.searchQuery(plan); }
+  hydrateItems(ids: readonly number[]) { return this.search.hydrateItems(ids); }
+  facetCandidates(ids: readonly number[]) { return this.search.facetCandidates(ids); }
+  countChip(chip: ChipPlan) { return this.search.countChip(chip); }
+  explainItem(platform: string, externalId: string, chips: readonly ChipPlan[]) { return this.search.explainItem(platform, externalId, chips); }
+  vocabulary() { return this.search.vocabulary(); }
+
   // ------------------------------------------------------------------ StorageAdapter
 
   async migrate(): Promise<{ from: number; to: number }> {
@@ -95,6 +111,7 @@ export class SqliteAdapter implements StorageAdapter {
   }
 
   async upsertBatch(batch: ParsedBatch): Promise<UpsertResult> {
+    this.dataVersion++; // (bumped even if the batch fails: invalidating a cache too often is safe, too rarely is not)
     try {
       return this.db.transaction(() => this.upsertSync(batch));
     } catch (e) {
@@ -112,7 +129,7 @@ export class SqliteAdapter implements StorageAdapter {
       'SELECT c.external_id AS externalId, c.name AS name, ic.position AS position FROM item_collections ic JOIN collections c ON c.id = ic.collection_id WHERE ic.item_id = ?1 ORDER BY c.name',
       [id],
     ).map((c) => ({ externalId: String(c.externalId), name: String(c.name), position: Number(c.position) }));
-    return { ...this.rowToItem(row, hashtags), id, collections };
+    return { ...rowToItem(row, hashtags), id, collections };
   }
 
   async listCollections(): Promise<StoredCollection[]> {
@@ -143,6 +160,7 @@ export class SqliteAdapter implements StorageAdapter {
     if (input.seenExternalIds.length === 0 && !input.allowEmpty) {
       throw new Error('reconcile refused: empty seenExternalIds (pass allowEmpty: true if the platform list is really empty)');
     }
+    this.dataVersion++;
     return this.db.transaction(() => this.reconcileSync(input));
   }
 
@@ -152,7 +170,7 @@ export class SqliteAdapter implements StorageAdapter {
       const id = Number(r[0]);
       (tagsByItem.get(id) ?? tagsByItem.set(id, []).get(id)!).push(String(r[1]));
     }
-    const items = this.db.selectObjects('SELECT * FROM items ORDER BY id').map((row) => this.rowToItem(row, tagsByItem.get(Number(row.id)) ?? []));
+    const items = this.db.selectObjects('SELECT * FROM items ORDER BY id').map((row) => rowToItem(row, tagsByItem.get(Number(row.id)) ?? []));
     const collections = (await this.listCollections()).map(({ itemsSeen: _seen, ...c }) => c);
     const memberships: Membership[] = this.db.selectObjects(
       `SELECT i.platform AS platform, i.external_id AS itemExternalId, c.external_id AS collectionExternalId, ic.position AS position
@@ -165,6 +183,7 @@ export class SqliteAdapter implements StorageAdapter {
   async importAll(bundle: ExportBundle): Promise<void> {
     if (bundle?.format !== 'scroganize-export' || bundle.version !== 1) throw new Error('not a Scroganize export (unknown format/version)');
     if (bundle.schemaVersion > schemaVersion(this.db)) throw new Error(`export was written by a newer schema (v${bundle.schemaVersion})`);
+    this.dataVersion++;
     try { this.importSync(bundle); } catch (e) { this.tagIds.clear(); throw e; }
   }
 
@@ -201,6 +220,7 @@ export class SqliteAdapter implements StorageAdapter {
   }
 
   async wipe(): Promise<void> {
+    this.dataVersion++;
     this.db.transaction(() => this.wipeSync());
   }
 
@@ -434,36 +454,5 @@ export class SqliteAdapter implements StorageAdapter {
   private wipeSync(): void {
     for (const t of ['item_hashtags', 'item_collections', 'items_fts', 'items', 'hashtags', 'collections']) this.db.exec(`DELETE FROM ${t}`);
     this.tagIds.clear();
-  }
-
-  // ------------------------------------------------------------------ row mapping
-
-  private rowToItem(row: Record<string, unknown>, hashtags: string[]): Omit<StoredItem, 'id' | 'collections'> {
-    const num = (v: unknown) => (v === null || v === undefined ? undefined : Number(v));
-    const str = (v: unknown) => (v === null || v === undefined ? undefined : String(v));
-    const stats = { views: num(row.views), likes: num(row.likes), comments: num(row.comments), shares: num(row.shares), saves: num(row.saves) };
-    return {
-      platform: String(row.platform),
-      externalId: String(row.external_id),
-      authorHandle: String(row.author_handle),
-      authorName: str(row.author_name),
-      caption: String(row.caption),
-      hashtags,
-      soundTitle: str(row.sound_title),
-      soundAuthor: str(row.sound_author),
-      durationSec: num(row.duration_sec),
-      mediaType: row.media_type === 'photo' ? 'photo' : 'video',
-      postedAt: num(row.posted_at),
-      stats: Object.values(stats).some((v) => v !== undefined) ? stats : undefined,
-      thumbnailUrl: str(row.thumbnail_url),
-      language: str(row.language),
-      isAd: Number(row.is_ad) === 1,
-      savedAt: Number(row.saved_at),
-      savedAtSource: String(row.saved_at_source) as SavedAtSource,
-      rawJson: str(row.raw_json),
-      firstSeenAt: Number(row.first_seen_at),
-      lastSeenAt: Number(row.last_seen_at),
-      available: Number(row.available) === 1,
-    };
   }
 }

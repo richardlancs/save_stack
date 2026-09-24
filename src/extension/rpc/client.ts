@@ -31,6 +31,9 @@ export class RpcCallError extends Error {
   }
 }
 
+/** A search that a newer one replaced. Not an error to show: ignore the result. */
+export const isSuperseded = (e: unknown): boolean => e instanceof RpcCallError && e.code === 'SUPERSEDED';
+
 let counter = 0;
 const newId = (): string => `${Date.now().toString(36)}-${(counter++).toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -57,7 +60,7 @@ export function createClient(send: Transport) {
     exportData: () => call('exportData'),
     importData: (bundle: ExportBundle) => call('importData', bundle),
     wipeData: () => call('wipeData'),
-    // Search (M2): results first, extras after.
+    // Search (M2): results first, extras after. Use one requestId per search cycle; a newer search supersedes older ones (see isSuperseded).
     search: (req: SearchRequest): Promise<SearchResponse> => call('search', req),
     getChipInfo: (req: ChipInfoRequest): Promise<ChipInfoResponse> => call('getChipInfo', req),
     explainMatch: (req: ExplainRequest): Promise<ExplainResponse> => call('explainMatch', req),

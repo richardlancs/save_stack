@@ -6,6 +6,7 @@ import type { SAHPoolUtil, Sqlite3Static } from '@sqlite.org/sqlite-wasm';
 import { applyPragmas } from '../../../core/storage/sqlite/migrate';
 import { SqliteAdapter } from '../../../core/storage/sqlite/sqlite-adapter';
 import { RPC_VERSION, type RpcResponse } from '../../rpc/protocol';
+import { createSearchGate } from '../../rpc/search-gate';
 import { createRpcServer } from '../../rpc/server';
 
 const POOL = { name: 'scroganize', directory: '.scroganize', initialCapacity: 8 } as const;
@@ -46,11 +47,18 @@ async function resetStorage(): Promise<void> {
   await openDb();
 }
 
+/**
+ * Tracks the newest search to ARRIVE so a queued older one is dropped when its turn comes (SUPERSEDED). It yields one event-loop
+ * turn before a search runs, because messages that arrived while the worker was busy have not registered until it does
+ * (see rpc/search-gate.ts).
+ */
+const gate = createSearchGate(() => new Promise<void>((resolve) => setTimeout(resolve, 0)));
+
 const ready = (async () => {
   const sqlite3 = await sqlite3InitModule();
   pool = await installPool(sqlite3);
   await openDb();
-  return createRpcServer({ adapter: () => adapter, resetStorage, storage: 'opfs-sahpool' });
+  return createRpcServer({ adapter: () => adapter, resetStorage, storage: 'opfs-sahpool', isSuperseded: gate.isSuperseded });
 })();
 ready.catch(() => { /* reported per request below */ });
 
@@ -60,6 +68,7 @@ let queue: Promise<void> = Promise.resolve();
 async function handle(request: unknown): Promise<void> {
   const id = typeof (request as { id?: unknown })?.id === 'string' ? (request as { id: string }).id : '';
   try {
+    await gate.beforeRun(request);
     post(await (await ready)(request));
   } catch (e) {
     post({ v: RPC_VERSION, id, ok: false, error: { code: 'UNAVAILABLE', message: `database failed to start: ${(e as Error)?.message ?? e}` } });
@@ -67,5 +76,6 @@ async function handle(request: unknown): Promise<void> {
 }
 
 self.addEventListener('message', (ev: MessageEvent) => {
+  gate.noteArrival(ev.data);
   queue = queue.then(() => handle(ev.data));
 });

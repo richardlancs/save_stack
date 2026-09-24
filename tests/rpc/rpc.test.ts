@@ -50,10 +50,8 @@ describe('RPC', () => {
   it('methods declared for later milestones answer NOT_IMPLEMENTED with the milestone', async () => {
     const { client } = await setup();
     for (const [call, milestone] of [
-      [() => client.search({ requestId: 'r', chips: [] }), 'M2'],
-      [() => client.getChipInfo({ requestId: 'r', chips: [] }), 'M2'],
-      [() => client.explainMatch({ platform: 'tiktok', externalId: 'x', chips: [] }), 'M2'],
       [() => client.startSync(), 'M4'],
+      [() => client.pauseSync(), 'M4'],
       [() => client.getSettings(), 'M6'],
     ] as const) {
       await expect(call()).rejects.toMatchObject({ name: 'RpcCallError', code: 'NOT_IMPLEMENTED', message: expect.stringContaining(milestone) });

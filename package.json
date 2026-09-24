@@ -14,7 +14,11 @@
     "fixtures:tiktok": "node scripts/make-tiktok-fixtures.mjs",
     "bench:ingest": "tsx bench/ingest.ts",
     "build:e2e": "cross-env WXT_E2E_HOOKS=1 wxt build",
-    "e2e:storage": "npm run build:e2e && tsx bench/run-ingest.ts"
+    "e2e:storage": "npm run build:e2e && tsx bench/run-ingest.ts",
+    "bench:search": "tsx bench/search.ts",
+    "check:build": "node scripts/check-build.mjs",
+    "gate": "npm run typecheck && npm test && npm run bench:ingest && npm run bench:search && npm run build && npm run check:build && npm run e2e:storage",
+    "mutate": "node scripts/mutation-check.mjs"
   },
   "devDependencies": {
     "@types/chrome": "^0.3.0",

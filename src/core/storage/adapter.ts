@@ -2,8 +2,9 @@
 // depends on this interface only. It is async so an IndexedDB fallback could implement it if OPFS ever fails,
 // even though the SQLite implementation is synchronous underneath.
 //
-// Search is deliberately absent: M2 extends this interface once the query pipeline exists.
+// Search comes in through SearchStore (src/core/search/store.ts): the SQL for it lives with the engine, the query logic does not.
 
+import type { SearchStore } from '../search/store';
 import type {
   ExportBundle,
   ParsedBatch,
@@ -15,7 +16,7 @@ import type {
   UpsertResult,
 } from '../model';
 
-export interface StorageAdapter {
+export interface StorageAdapter extends SearchStore {
   /** Bring the database to the latest schema. Idempotent. */
   migrate(): Promise<{ from: number; to: number }>;
 

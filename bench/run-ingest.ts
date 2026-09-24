@@ -12,6 +12,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { chromium, type BrowserContext, type Worker } from 'playwright';
+import sqlite3InitModule from '@sqlite.org/sqlite-wasm';
+import { SearchService } from '../src/core/search/service';
+import { applyPragmas } from '../src/core/storage/sqlite/migrate';
+import { SqliteAdapter } from '../src/core/storage/sqlite/sqlite-adapter';
 import { synthBatches, synthLibrary } from './synth-batches';
 
 const ITEMS = Number(process.env.ITEMS ?? 50_000);
@@ -119,11 +123,69 @@ try {
   console.log(`      offscreen document destroyed -> next call answered after ${ms(t)} ms (recreated, handles re-acquired, DB reopened)`);
   check(recovered.items === ITEMS, 'RPC recovers after the offscreen document is destroyed, with data intact');
 
+  // ---------------------------------------------------------------- search through the real extension, checked against the in-memory engine
+  {
+    const sqlite3 = await sqlite3InitModule();
+    const memDb = new sqlite3.oo1.DB(':memory:');
+    applyPragmas(memDb);
+    const memAdapter = new SqliteAdapter(memDb);
+    await memAdapter.migrate();
+    for (const b of batches) await memAdapter.upsertBatch(b);
+    const memService = new SearchService(memAdapter);
+    // an identical library is needed for the comparison: the earlier restart/recovery steps kept it, so re-ingest what a wipe removed is not needed
+    const c = (id: string, text: string, expand = true) => ({ id, text, expand });
+    const workloads: Array<{ name: string; chips: ReturnType<typeof c>[]; mode?: 'all' | 'any'; limitMs: number }> = [
+      { name: '1 chip "food"', chips: [c('a', 'food')], limitMs: 150 },
+      { name: '2 chips AND "food" + "easy"', chips: [c('a', 'food'), c('b', 'easy')], limitMs: 150 },
+      { name: '4 chips ANY (makeup skincare hair fashion)', chips: ['makeup', 'skincare', 'hair', 'fashion'].map((t, i) => c(`m${i}`, t)), mode: 'any', limitMs: 200 },
+      { name: 'zero results ("makup")', chips: [c('a', 'makup')], limitMs: 150 },
+      { name: 'substring chip "レシピ"', chips: [c('a', 'レシピ')], limitMs: 300 },
+    ];
+    for (const w of workloads) {
+      const params = { requestId: `e2e-s-${seq++}`, chips: w.chips, mode: w.mode, limit: 30 };
+      const expected = await memService.search(params);
+      const times: number[] = [];
+      let got: any;
+      for (let i = 0; i < 15; i++) {
+        const { response, swMs } = await sw.evaluate((r) => (globalThis as any).__scroganize.forwardTimed(r), { v: 1, id: `s-${seq++}`, method: 'search', params: { ...params, requestId: `e2e-s-${seq++}` } });
+        if (!response.ok) throw new Error(`search ${w.name}: ${response.error.code}: ${response.error.message}`);
+        got = response.result;
+        times.push(swMs);
+      }
+      times.sort((a, b) => a - b);
+      const p95 = times[Math.floor(times.length * 0.95)]!;
+      const sameIds = JSON.stringify(got.results.map((r: any) => r.item.externalId)) === JSON.stringify(expected.results.map((r) => r.item.externalId));
+      check(got.total === expected.total && sameIds, `search "${w.name}" through the real extension returns exactly what the in-memory engine returns (${got.total} results, first page identical)`);
+      check(p95 <= w.limitMs, `search "${w.name}" p50 ${times[7]!.toFixed(0)} ms / p95 ${p95.toFixed(0)} ms through service worker -> offscreen -> worker (limit ${w.limitMs})`);
+    }
+    // chip info and explain through the real path
+    const chipsAll = [c('a', 'food'), c('b', 'makup')];
+    const info = await rpc(sw, 'getChipInfo', { requestId: `e2e-c-${seq++}`, chips: chipsAll });
+    check(info.chips[0].count > 0 && info.chips[0].expandedTerms.length > 0 && info.chips[1].count === 0 && info.chips[1].didYouMean === 'makeup', 'getChipInfo through the real path: counts, related terms and did-you-mean ("makup" -> "makeup")');
+    const firstFood = (await rpc(sw, 'search', { requestId: `e2e-f-${seq++}`, chips: [c('a', 'food')], limit: 1 })).results[0];
+    const ex = await rpc(sw, 'explainMatch', { platform: 'tiktok', externalId: firstFood.item.externalId, chips: [c('a', 'food')] });
+    check(ex.matches[0].via !== 'none', 'explainMatch through the real path explains a real result');
+
+    // a search replaced by a newer one is dropped by the real worker (a slow request keeps them queued behind it)
+    const slow = sw.evaluate((r) => (globalThis as any).__scroganize.forward(r), { v: 1, id: `slow-${seq++}`, method: 'exportData', params: undefined });
+    await new Promise((r) => setTimeout(r, 40));
+    const older = sw.evaluate((r) => (globalThis as any).__scroganize.forward(r), { v: 1, id: `old-${seq++}`, method: 'search', params: { requestId: 'e2e-older', chips: [c('a', 'food')] } });
+    await new Promise((r) => setTimeout(r, 15));
+    const newer = sw.evaluate((r) => (globalThis as any).__scroganize.forward(r), { v: 1, id: `new-${seq++}`, method: 'search', params: { requestId: 'e2e-newer', chips: [c('a', 'food')] } });
+    const [slowRes, olderRes, newerRes] = await Promise.all([slow, older, newer]);
+    check(slowRes.ok === true, 'the slow export the searches queued behind completed');
+    check(olderRes.ok === false && olderRes.error.code === 'SUPERSEDED', `a search replaced by a newer one is dropped by the real worker with SUPERSEDED (got ${olderRes.ok ? 'ok' : olderRes.error.code})`);
+    check(newerRes.ok === true && newerRes.result.total > 0, 'the newer search is answered normally');
+    memDb.close();
+  }
+
   // ---------------------------------------------------------------- bad input over the real path
   const bad = await sw.evaluate((r) => (globalThis as any).__scroganize.forward(r), { v: 1, id: 'bad-1', method: 'dropTables', params: null });
   check(bad.ok === false && bad.error.code === 'BAD_REQUEST', 'an unknown method is rejected with BAD_REQUEST');
-  const ni = await sw.evaluate((r) => (globalThis as any).__scroganize.forward(r), { v: 1, id: 'ni-1', method: 'search', params: { requestId: 'r', chips: [] } });
-  check(ni.ok === false && ni.error.code === 'NOT_IMPLEMENTED', 'search answers NOT_IMPLEMENTED until M2');
+  const ni = await sw.evaluate((r) => (globalThis as any).__scroganize.forward(r), { v: 1, id: 'ni-1', method: 'startSync', params: {} });
+  check(ni.ok === false && ni.error.code === 'NOT_IMPLEMENTED', 'startSync answers NOT_IMPLEMENTED until M4');
+  const badChip = await sw.evaluate((r) => (globalThis as any).__scroganize.forward(r), { v: 1, id: 'bc-1', method: 'search', params: { requestId: 'bc', chips: [{ id: 'x', text: '   ' }] } });
+  check(badChip.ok === false && badChip.error.code === 'BAD_REQUEST', 'a search with an empty chip is rejected with BAD_REQUEST');
 
   // ---------------------------------------------------------------- wipe reclaims storage
   await rpc(sw, 'wipeData');

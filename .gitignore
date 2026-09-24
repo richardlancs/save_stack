@@ -12,3 +12,4 @@ coverage/
 
 # local spike logs / profiles
 bench/.spike-*.log
+.gate-*.log

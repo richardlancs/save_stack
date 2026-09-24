@@ -61,6 +61,24 @@ Status: **sync scope accepted** (all favorites + collections as tags); the rest 
 
 Measured on the real extension (Chromium 153, real OPFS, 50k synthetic videos): **ingest 4,811 items/s** through service worker -> offscreen -> worker (budget 2,000); 5,762 items/s inside the worker alone; 2,291 items/s including my Playwright harness's own transfer overhead, which is not part of the product. 60 MB database; cold start about 1.1 s including launching the browser; recovery after the offscreen document is destroyed 180 ms; data survives a full browser restart.
 
+## M2: search (implemented; evidence in `tests/search/`, `docs/SEARCH_PERFORMANCE.md`)
+
+| Decision | Why |
+|---|---|
+| **Search is three calls: `search` (results + capped total + suggested chips), `getChipInfo` (per-chip counts, related terms, did-you-mean), `explainMatch` (why one result matched).** | Keeps first paint fast; per-row attribution in SQL cost 130 to 290 ms. |
+| **Two ranking tiers:** videos matching the chips' own words first (bm25 with weights hashtags 4, caption 2, author 1.5, sound 1, collections 0.5), then related-only matches via FTS5 `(full) NOT (direct)`, queried only to fill the page. | The single-pass version measured 266 to 479 ms for multi-chip ANY searches. |
+| **Related terms are data (`related-terms.json`: 87 categories, 167 aliases, ≤ 30 terms each), behind a `TermExpander` interface.** | Editable without code; replaceable by embeddings later. Measured: `"food"` alone finds 17% of the hand-labeled food videos, with related terms 100%. |
+| **A query shares a total budget of 60 related terms across its chips** (1 to 2 chips keep 30 each; 5 chips get 12 each; floor 8). `getChipInfo` uses the same share. | Full-text cost grows with expression size (~120 OR'd terms took 60+ ms). Bounds latency by construction; costs a little recall on many-chip queries. |
+| **More than 10,000 matches = "too broad": total capped at 10,001, relevance skipped, newest-saved first.** When the chips' own words alone exceed 10,000, only those matches are listed. | The M0 mitigation, now measured: broad ANY 70 → 43 ms and 93 → 49 ms. Related-only matches are not in a too-broad listing (documented in `UI_CONTRACT.md`). |
+| **Chips with CJK/emoji match by substring over the plain `items` table** (five columns + hashtag/collection ids resolved first); such searches are ordered newest-saved. | FTS5 cannot serve them. **Over the 50 ms budget** (66/60/90 ms p95): documented exceptions with a 120 ms ceiling; fix options are in `SEARCH_PERFORMANCE.md`. |
+| **Cursors are self-describing, carry the total, and are tied to their sort** (`r:<offset>:<total>`, `k:<sort>:<value>:<id>:<total>`, and `d:` for an own-words listing); column-ordered pages use keyset pagination; the total is clamped. | Later pages skip the count (71 → 31 ms), stay stable if rows arrive between pages, and a cursor replayed under another sort is refused instead of silently skipping rows (found by code review). |
+| **`SUPERSEDED` error and a search gate that yields one event-loop turn before a search.** | Found by the real-extension e2e: while the worker is busy, later messages cannot register, so a stale queued search still ran. |
+| **Suggested chips exclude platform-noise hashtags (`fyp`, `foryou`, `viral`, ...) and chips already in use; only the first page carries them.** | Noise would otherwise dominate the suggestions. |
+| **Snippets are structured segments computed with a lightweight JS matcher, never HTML.** Which chip matched a result is answered authoritatively by `explainMatch` (SQL). | Captions are untrusted; the highlighter is an approximation for display only. |
+| **The quality bar is a hand-labeled library:** recall ≥ 90% and precision ≥ 85% overall (measured 96.3% / 90.8%), per category recall ≥ 70%. | Related terms are a judgment call; a labeled set catches gross errors. The traps ("cooking up a surprise") count as unavoidable false positives. |
+
 ## Operational notes
 
-- `save_stack/` (an unrelated clone of `richardlancs/save_stack`, an Instagram-saves project) is present in the working tree. It is not part of Scroganize. Commits stage explicit paths and never `git add -A`, so it is never embedded in this repo.
+- An unrelated clone of `richardlancs/save_stack` (an Instagram-saves project) was in the working tree during M0 and M1 and has since been removed by someone else. Commits still stage explicit paths and never `git add -A`.
+- The repository's `origin` is `richardlancs/save_stack`, and `origin/main` already contains the M0 commit. Nothing from M1 onward has been pushed by me.
+- This machine is shared with an unrelated long-running background job, so timings swing 1.5 to 2x. Benchmarks report the best of several rounds and print a calibration probe.

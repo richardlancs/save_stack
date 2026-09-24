@@ -30,6 +30,7 @@ export const RPC_VERSION = 1;
 export type RpcErrorCode =
   | 'BAD_REQUEST' //     malformed envelope or params
   | 'NOT_IMPLEMENTED' // declared in the contract, arrives in a later milestone
+  | 'SUPERSEDED' //      a newer search replaced this one before it ran; ignore the result
   | 'UNAVAILABLE' //     the database owner is not reachable / failed to start
   | 'INTERNAL'; //       the operation failed
 
@@ -66,10 +67,12 @@ export interface Methods {
   /** Extension-internal. */
   reconcile: { params: ReconcileInput; result: ReconcileResult };
 
+  // ---- search (M2). Three calls, results first: see docs/UI_CONTRACT.md §4
+  search: { params: SearchRequest; result: SearchResponse };
+  getChipInfo: { params: ChipInfoRequest; result: ChipInfoResponse };
+  explainMatch: { params: ExplainRequest; result: ExplainResponse };
+
   // ---- declared now, implemented later (calls return NOT_IMPLEMENTED until then)
-  search: { params: SearchRequest; result: SearchResponse }; //                   M2
-  getChipInfo: { params: ChipInfoRequest; result: ChipInfoResponse }; //          M2
-  explainMatch: { params: ExplainRequest; result: ExplainResponse }; //           M2
   startSync: { params: SyncOptions; result: null }; //                            M4
   pauseSync: { params: Void; result: null }; //                                   M4
   resumeSync: { params: Void; result: null }; //                                  M4
@@ -82,6 +85,7 @@ export type MethodName = keyof Methods;
 
 export const IMPLEMENTED_METHODS = [
   'ping', 'getStats', 'getCollections', 'getItem', 'exportData', 'importData', 'wipeData', 'upsertBatch', 'reconcile',
+  'search', 'getChipInfo', 'explainMatch',
 ] as const satisfies readonly MethodName[];
 export type ImplementedMethod = (typeof IMPLEMENTED_METHODS)[number];
 
