@@ -6,7 +6,7 @@
 //
 //   node scripts/make-tiktok-fixtures.mjs
 //
-// Deterministic: no randomness, no clock.
+// The generated fixtures are used in unit tests and in the "tiktok" platform's mock server (for local development).
 import fs from 'node:fs';
 import path from 'node:path';
 
