@@ -3,7 +3,7 @@
 // It runs inside a dedicated Worker (see extension/entrypoints/offscreen/db.worker.ts).
 
 import type { Database, PreparedStatement, SAHPoolUtil, Sqlite3Static } from '@sqlite.org/sqlite-wasm';
-import schemaSql from '../src/core/storage/sqlite/schema.sql?raw';
+import schemaSql from './spike-schema.sql?raw';
 import { CATEGORIES, generateLibrary, type SynthItem, type SynthLibrary } from './synth';
 
 const now = () => performance.now();

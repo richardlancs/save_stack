@@ -2,7 +2,7 @@
 
 **Verdict: viable, with changes to the query pipeline and schema (below).** The stack works end to end inside a real MV3 extension: service worker → offscreen document → dedicated Worker → OPFS (`opfs-sahpool`) → FTS5. The naive query pipeline does *not* meet the 50 ms budget for multi-chip ANY searches (266 to 479 ms). A tiered pipeline with deferred work does for 12 of 14 workloads; the two exceptions are ANY over 4 to 5 broad chips (48 to 73 ms p95), see §4.
 
-Reproduce: `npm run spike` (full run, ~2 min) or `PROFILE_DIR=bench/.tmp/profile npm run spike` once, then `MODE=bench PROFILE_DIR=bench/.tmp/profile node bench/run-spike.mjs` for query-only runs. Raw results: `bench/results/`.
+Reproduce: the spike wiring was removed from the production entrypoints in M1. Check out git tag `m0-spike`, then `npx wxt build && node bench/run-spike.mjs` (full run, ~2 min), or `PROFILE_DIR=bench/.tmp/profile` once and then `MODE=bench PROFILE_DIR=bench/.tmp/profile node bench/run-spike.mjs` for query-only runs. Raw results: `bench/results/`. The query shapes it measured are the starting point for M2 (`bench/spike-core.ts`, `runSearchV2`).
 
 ## 1. Setup and caveats (read before trusting any number)
 

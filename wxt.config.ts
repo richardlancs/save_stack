@@ -3,6 +3,8 @@ import { defineConfig } from 'wxt';
 // Chrome-only MV3 build for v1. Keep the config small: everything platform- or
 // engine-specific belongs in src/, not here.
 export default defineConfig({
+  // The end-to-end build (test hooks enabled) goes to its own directory so it can never be mistaken for, or shipped as, the real build.
+  outDir: process.env.WXT_E2E_HOOKS ? '.output-e2e' : '.output',
   srcDir: 'src',
   entrypointsDir: 'extension/entrypoints',
   manifest: {

@@ -13,7 +13,7 @@ One line of "why" per decision. Newest at the bottom of each section. Status: **
 | **`@sqlite.org/sqlite-wasm` 3.53.4 with the `opfs-sahpool` VFS.** | No COOP/COEP or SharedArrayBuffer requirement, so no extra manifest headers. FTS5, DBSTAT and math functions are compiled in. The wasm is 869 KB. |
 | **Storage tests in Node use the package's Node build (`dist/node.mjs`) with in-memory DBs.** | Lets the storage contract suite run under Vitest against the real engine, without a browser. |
 
-## Storage (M0 spike; **proposed**, evidence in `STORAGE_SPIKE.md`)
+## Storage (M0 spike; **accepted 2026-09-24**, evidence in `STORAGE_SPIKE.md`)
 
 | Decision | Why |
 |---|---|
@@ -26,7 +26,9 @@ One line of "why" per decision. Newest at the bottom of each section. Status: **
 | **Per-chip counts and per-row "why matched" leave the first-paint path** (follow-up call; lazy per-row `explain`). | In SQL they cost ~1 ms per (row, chip) for broad chips: 130 to 290 ms for a 30-row page. |
 | **Multiword chips also try the concatenated hashtag** (`meal prep` → `mealprep`). | Hashtags are one token; without this "meal prep" matched 0 videos in the benchmark, with it 3,183. |
 
-## TikTok ingestion (M0 findings; **proposed**, evidence in `TIKTOK_FINDINGS.md`)
+## TikTok ingestion (M0 findings; evidence in `TIKTOK_FINDINGS.md`)
+
+Status: **sync scope accepted** (all favorites + collections as tags); the rest are **proposed** until M3/M4 verify them live.
 
 | Decision | Why |
 |---|---|
@@ -39,6 +41,25 @@ One line of "why" per decision. Newest at the bottom of each section. Status: **
 | **Refuse to sync unless the profile's `uniqueId` equals `webapp.app-context.user.uniqueId`.** | Enforces "only the signed-in user's own data". |
 | **Parser treats every field except `id` as optional; photo posts (22%) have `duration = 0` and `imagePost`.** | Observed optional-field rates 0.2 to 87%. |
 | **Fixtures are reconstructed from observed structure, not raw captures.** | Raw captures contain a real person's saved videos and signed URLs; my in-page scrubber failed its own leak audit, so it was not used. |
+
+## M1: storage + RPC (implemented; evidence in the tests and `bench/`)
+
+| Decision | Why |
+|---|---|
+| **Four M0 decisions accepted (2026-09-24):** sync all favorites + collections as tags; slim schema; split search API (results / `getChipInfo` / `explainMatch`); recency order + "narrow it" prompt above 10,000 matches (implemented in M2). | Evidence in `STORAGE_SPIKE.md` §3 to §4. |
+| **Migrations are TypeScript string modules, not `.sql` files loaded with `?raw`.** Applied in order under `PRAGMA user_version`, each in its own transaction with the version bump; a newer database is refused. | Loads identically under Vite, Vitest and plain Node (`tsx` benches). Tested: idempotent, contiguous, atomic on failure, upgrade keeps data. |
+| **`StorageAdapter` is async and excludes search until M2.** The SQLite adapter takes any sqlite-wasm `Database`. | Keeps an IndexedDB fallback possible; one implementation runs in Node tests and in the OPFS worker. |
+| **Two columns added to the M0 schema:** `media_type` ('video' or 'photo') and `is_ad`. | Findings: 22% of favorites are photo carousels (`duration = 0`), and 14/227 saved items were ads. |
+| **`saved_at` provenance: exact > first_seen > interpolated > unknown.** Set at insert, replaced only by a strictly better source, never downgraded. | TikTok exposes no per-video saved time; the sync layer labels what it estimated. Tested. |
+| **Full-text rows are written after memberships**, so the `collections` column is correct first time; membership changes and collection renames refresh only the affected rows. | Chips match collection names ("recipes" finds a video in the Recipes collection). A test asserts the index mirrors the tables after every kind of change, and mutation checks confirmed those tests fail when the maintenance is removed. |
+| **`reconcile` refuses an empty seen-list unless `allowEmpty`.** Missing videos become `available = 0`, never deleted. | A failed or interrupted sync must not silently mark the whole library unavailable. |
+| **A rolled-back batch clears the in-memory hashtag id cache.** | A mutation check showed that without it a failed batch poisons later ones (dangling ids). |
+| **RPC envelope v1** `{v, id, method, params}` -> `{v, id, ok, result \| error, serverMs?}`; all methods idempotent so the service worker can safely retry. The DB worker handles **one request at a time**. | A wipe must never interleave with another call. `serverMs` separates database time from transport time. |
+| **Test hooks exist only in a build made with `WXT_E2E_HOOKS=1`, which is emitted to `.output-e2e/`.** A normal build contains no hook (verified by grep). | The e2e needs a way to drive the service worker; it must never ship. |
+| **Bench/e2e scripts run with `tsx`; Node types are pulled in per file** with `/// <reference types="node" />`. | Keeps Node globals out of extension code. |
+| **The M0 spike wiring was removed from the production entrypoints.** It stays reproducible at git tag `m0-spike`; `bench/spike-core.ts` remains as the reference for M2's search shapes. | One code path in production. |
+
+Measured on the real extension (Chromium 153, real OPFS, 50k synthetic videos): **ingest 4,811 items/s** through service worker -> offscreen -> worker (budget 2,000); 5,762 items/s inside the worker alone; 2,291 items/s including my Playwright harness's own transfer overhead, which is not part of the product. 60 MB database; cold start about 1.1 s including launching the browser; recovery after the offscreen document is destroyed 180 ms; data survives a full browser restart.
 
 ## Operational notes
 

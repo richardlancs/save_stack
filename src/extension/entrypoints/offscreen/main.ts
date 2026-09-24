@@ -1,65 +1,44 @@
-// M0 SPIKE offscreen document: spawns DB workers and relays results to the service worker.
-import type { SpikeOptions } from '../../../../bench/spike-core';
+// The offscreen document: hosts the DB Worker and relays RPC between the service worker and it.
+// It contains no logic of its own, only a request/response correlator with a timeout.
+import { RPC_VERSION, type RpcResponse, type RuntimeMessage } from '../../rpc/protocol';
 
-const spawn = () => new Worker(new URL('./db.worker.ts', import.meta.url), { type: 'module' });
+const REQUEST_TIMEOUT_MS = 120_000; // generous: import / wipe of a large library
 
-function call<T>(w: Worker, msg: Record<string, unknown>): Promise<T> {
-  const id = Math.floor(Math.random() * 1e9);
-  return new Promise<T>((resolve, reject) => {
-    const onMsg = (ev: MessageEvent) => {
-      const d = ev.data as { id?: number; ok?: boolean; result?: T; error?: string; log?: string };
-      if (d.log !== undefined) { relayLog(d.log); return; }
-      if (d.id !== id) return;
-      w.removeEventListener('message', onMsg);
-      d.ok ? resolve(d.result as T) : reject(new Error(d.error));
-    };
-    w.addEventListener('message', onMsg);
-    w.addEventListener('error', (e) => reject(new Error('worker error: ' + e.message)), { once: true });
-    w.postMessage({ id, ...msg });
-  });
+let worker: Worker | null = null;
+const pending = new Map<string, (r: RpcResponse) => void>();
+
+const unavailable = (id: string, message: string): RpcResponse => ({ v: RPC_VERSION, id, ok: false, error: { code: 'UNAVAILABLE', message } });
+
+function failAll(message: string): void {
+  for (const [id, resolve] of pending) resolve(unavailable(id, message));
+  pending.clear();
 }
 
-const relayLog = (text: string) => {
-  console.log('[spike]', text);
-  chrome.runtime.sendMessage({ target: 'background', type: 'log', text }).catch(() => {});
-};
-
-async function runSpike(opts: (Partial<SpikeOptions> & { mode?: 'full' | 'bench' }) | undefined) {
-  if (opts?.mode === 'bench') {
-    // Query-only benchmark against the database a previous full run left in OPFS.
-    const w = spawn();
-    const bench = await call<Record<string, unknown>>(w, { type: 'bench', runs: opts.runs });
+function getWorker(): Worker {
+  if (worker) return worker;
+  const w = new Worker(new URL('./db.worker.ts', import.meta.url), { type: 'module' });
+  w.onmessage = (ev: MessageEvent<RpcResponse>) => {
+    pending.get(ev.data.id)?.(ev.data);
+    pending.delete(ev.data.id);
+  };
+  w.onerror = (ev) => {
+    // A crashed worker released its OPFS handles; the next request starts a fresh one.
+    failAll(`database worker crashed: ${ev.message}`);
     w.terminate();
-    return { bench };
-  }
-  // Phase 1: build + benchmark in worker A, then drop it (terminate releases the OPFS handles).
-  const a = spawn();
-  const full = await call<Record<string, unknown>>(a, { type: 'full', opts });
-  a.terminate();
-  const tTerminated = performance.now();
-
-  // Phase 2: cold reopen in a fresh worker. Retries until the old worker's handles are released.
-  relayLog('cold reopen in fresh worker');
-  const b = spawn();
-  const reopen = await call<Record<string, unknown>>(b, { type: 'reopen', retryMs: 15000, runs: 20 });
-  reopen.msFromTerminateToReady = Math.round((performance.now() - tTerminated) * 100) / 100;
-
-  // Phase 3: while B still holds the pool, a second worker must be refused (single-owner model).
-  relayLog('contention check');
-  const c = spawn();
-  const contention = await call<Record<string, unknown>>(c, { type: 'contend' });
-  c.terminate();
-  b.terminate();
-  return { full, reopen, contention };
+    if (worker === w) worker = null;
+  };
+  worker = w;
+  return w;
 }
 
-chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-  if (msg?.target !== 'offscreen' || msg.type !== 'spike:run') return;
-  runSpike(msg.opts).then(
-    (result) => sendResponse({ ok: true, result }),
-    (e) => sendResponse({ ok: false, error: String(e?.stack ?? e) }),
-  );
-  return true; // async response
+chrome.runtime.onMessage.addListener((message: RuntimeMessage, _sender, sendResponse) => {
+  if (message?.target !== 'offscreen') return false; // not ours; let the right listener answer
+  const { request } = message;
+  const answer = new Promise<RpcResponse>((resolve) => {
+    const timer = setTimeout(() => { pending.delete(request.id); resolve(unavailable(request.id, 'database request timed out')); }, REQUEST_TIMEOUT_MS);
+    pending.set(request.id, (r) => { clearTimeout(timer); resolve(r); });
+    try { getWorker().postMessage(request); } catch (e) { pending.delete(request.id); clearTimeout(timer); resolve(unavailable(request.id, String(e))); }
+  });
+  void answer.then(sendResponse);
+  return true; // respond asynchronously
 });
-
-console.log('[offscreen] ready');

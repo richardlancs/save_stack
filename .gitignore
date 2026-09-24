@@ -1,5 +1,6 @@
 node_modules/
 .output/
+.output-e2e/
 .wxt/
 dist/
 *.log
