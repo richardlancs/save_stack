@@ -22,12 +22,15 @@ export function Results(p: ResultsProps) {
   const { results: r, query: q } = p;
   const committed = q.committed;
 
-  if (r.status === 'idle' || (r.status === 'loading' && r.items.length === 0)) return <p class="muted" role="status">{r.status === 'loading' ? 'Searching...' : ''}</p>;
+  if (r.status === 'idle' || (r.status === 'loading' && r.items.length === 0)) return <p class="muted results-state" role="status">{r.status === 'loading' ? 'Searching...' : ''}</p>;
   if (r.status === 'error') return <p class="error" role="alert">Search failed: {r.error}</p>;
 
   if (!p.hasAnyVideos) { // an empty library: nothing to search, whatever categories are set
     return (
       <div class="empty">
+        <svg class="empty-icon" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <rect x="6" y="7" width="12" height="16" rx="2" /><rect x="22" y="7" width="12" height="16" rx="2" /><path d="M6 28h12M22 28h12M6 33h8M22 33h8" />
+        </svg>
         <h2>Nothing here yet</h2>
         <p>Press <strong>Sync</strong> to read your saved videos and collections, or just browse your saved videos on {p.platformName} while signed in: they appear here automatically.</p>
       </div>
@@ -38,10 +41,12 @@ export function Results(p: ResultsProps) {
   const countText = r.total === 0 ? 'No videos found' : `${formatCount(r.total, r.totalIsCapped)} ${r.total === 1 ? 'video' : 'videos'}`;
 
   return (
-    <section aria-label="Results">
+    <section class="results-section" aria-label="Results">
       <div class="summary">
-        <p class="count" role="status" aria-live="polite" data-testid="count">{countText}</p>
-        <p class="muted">{describeCommitted(q)}</p>
+        <div class="summary-title">
+          <p class="count" role="status" aria-live="polite" data-testid="count">{countText}</p>
+          <p class="muted result-context">{describeCommitted(q)}</p>
+        </div>
       </div>
 
       {r.chipInfo.length > 0 ? (
@@ -50,12 +55,11 @@ export function Results(p: ResultsProps) {
             const chip = committed.find((c) => c.id === info.chipId);
             if (!chip) return null;
             return (
-              <li key={info.chipId}>
-                <span class="chip-text">{chip.text}</span>
-                <span class="muted"> {formatCount(info.count, info.countIsCapped)}</span>
-                {info.expandedTerms.length > 0 ? <span class="muted"> · also matched: {info.expandedTerms.slice(0, 8).join(', ')}{info.expandedTerms.length > 8 ? ', ...' : ''}</span> : null}
+              <li class={info.count === 0 ? 'chipinfo-item zero' : 'chipinfo-item'} key={info.chipId}>
+                <span class="chipinfo-label"><span class="chip-text">{chip.text}</span> <span class="chip-count">{formatCount(info.count, info.countIsCapped)}</span></span>
+                {info.expandedTerms.length > 0 ? <span class="muted chipinfo-detail">also matched: {info.expandedTerms.slice(0, 8).join(', ')}{info.expandedTerms.length > 8 ? ', ...' : ''}</span> : null}
                 {info.didYouMean ? (
-                  <span> · <button type="button" class="linkbtn" onClick={() => p.onUseSuggestion(info.chipId, info.didYouMean!)}>Did you mean "{info.didYouMean}"?</button></span>
+                  <span class="chipinfo-detail"><button type="button" class="linkbtn" onClick={() => p.onUseSuggestion(info.chipId, info.didYouMean!)}>Did you mean "{info.didYouMean}"?</button></span>
                 ) : null}
               </li>
             );
@@ -97,7 +101,7 @@ export function Results(p: ResultsProps) {
             {r.suggested.slice(0, 12).map((s) => (
               <li class="chip suggestion" key={`${s.source}:${s.text}`}>
                 <button type="button" class="linkbtn" onClick={() => p.onAddSuggested(s.text)} aria-label={`Add the category ${s.text} (${plural(s.count, 'video')})`}>
-                  {s.text} <span class="muted">{formatCount(s.count)}</span>
+                  <span class="suggestion-plus" aria-hidden="true">+</span> {s.text} <span class="muted">{formatCount(s.count)}</span>
                 </button>
               </li>
             ))}

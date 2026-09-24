@@ -141,8 +141,16 @@ export function App() {
   return (
     <main class="app">
       <header class="top">
-        <h1>Scroganize</h1>
-        <p class="muted">Search the videos you saved.</p>
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21l-6-4-6 4Z" />
+            <path d="M10 8h4M10 11h4" />
+          </svg>
+        </span>
+        <div>
+          <h1>Scroganize</h1>
+          <p class="muted">Search the videos you saved.</p>
+        </div>
       </header>
 
       <SyncSection

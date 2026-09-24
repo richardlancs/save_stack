@@ -25,7 +25,68 @@ const search = (p: Page) => p.getByRole('button', { name: 'Search', exact: true 
 const appears = (l: { waitFor(o: { timeout: number }): Promise<void> }, timeout = 10_000): Promise<boolean> => l.waitFor({ timeout }).then(() => true, () => false);
 const chips = (p: Page) => p.locator('ul[aria-label="Categories in this search"] li .chip-text').allTextContents();
 
+/** Check actual content bounds as well as the document: hiding overflow must not hide a clipped control. */
+async function checkPanelWidth(p: Page, state: string) {
+  const bounds = await p.evaluate(`(() => {
+    const width = document.documentElement.clientWidth;
+    const selectors = '.app, .searchbox, .searchrow, .options, .segmented, .chip, .chip-x, .result, .result-body, .caption, .author, .tag, .why, .sync, .footer, .footer-actions, button, select';
+    const outside = [...document.querySelectorAll(selectors)].filter((el) => {
+      const rect = el.getBoundingClientRect();
+      const style = getComputedStyle(el);
+      return rect.width > 0 && style.visibility !== 'hidden' && (rect.left < -1 || rect.right > width + 1);
+    }).map((el) => el.className || el.tagName).slice(0, 5);
+    return { width, scrollWidth: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth), outside };
+  })()`) as { width: number; scrollWidth: number; outside: string[] };
+  check(bounds.scrollWidth <= bounds.width + 1 && bounds.outside.length === 0,
+    `${state}: no horizontal overflow or clipped controls (${bounds.scrollWidth}/${bounds.width}px${bounds.outside.length ? `; outside: ${bounds.outside.join(', ')}` : ''})`);
+}
+
+/** Follow real Tab navigation; hidden radio inputs must paint focus on their visible label. */
+async function checkKeyboardFocus(p: Page, state: string) {
+  const targets = [
+    { selector: '#category-input', name: 'category input' },
+    { selector: '.searchbox button[type="submit"]', name: 'Search' },
+    { selector: '.chip-x', name: 'remove category' },
+    { selector: '.seg input:checked', name: 'selected match mode' },
+    { selector: '.searchbox input[type="checkbox"]', name: 'related words' },
+    { selector: 'select[aria-label="Sort by"]', name: 'sort' },
+    { selector: '.result .link', name: 'Open result' },
+    { selector: '.result .linkbtn', name: 'Why this matched' },
+    { selector: '.footer-actions button', name: 'Export' },
+  ];
+  await p.locator('#category-input').focus();
+  await p.keyboard.press('Shift+Tab');
+  const selectors = JSON.stringify(targets.map((target) => target.selector));
+  const baseline = await p.evaluate(`(${selectors}).map((selector) => {
+    const el = document.querySelector(selector);
+    const indicator = el?.matches('.seg input') ? el.closest('.seg') : el;
+    return indicator ? getComputedStyle(indicator).boxShadow : null;
+  })`) as Array<string | null>;
+  const visited = new Set<number>();
+  for (let step = 0; step < 100 && visited.size < targets.length; step++) {
+    await p.keyboard.press('Tab');
+    const focused = await p.evaluate(`(() => {
+      const index = (${selectors}).findIndex((selector) => document.querySelector(selector) === document.activeElement);
+      if (index < 0) return null;
+      const el = document.activeElement;
+      const indicator = el.matches('.seg input') ? el.closest('.seg') : el;
+      const style = getComputedStyle(indicator);
+      const rect = indicator.getBoundingClientRect();
+      const outline = parseFloat(style.outlineWidth) >= 2 && style.outlineStyle !== 'none' && style.outlineColor !== 'rgba(0, 0, 0, 0)' && style.outlineColor !== 'transparent';
+      const shadow = style.boxShadow !== 'none' && style.boxShadow !== (${JSON.stringify(baseline)})[index];
+      return { index, visible: el.matches(':focus-visible') && Number(style.opacity) > 0 && rect.width >= 8 && rect.height >= 8 && (outline || shadow) };
+    })()`) as { index: number; visible: boolean } | null;
+    if (focused && !visited.has(focused.index)) {
+      visited.add(focused.index);
+      check(focused.visible, `${state}: ${targets[focused.index]!.name} has a visible keyboard focus indicator`);
+    }
+  }
+  check(visited.size === targets.length,
+    `${state}: Tab reaches all key controls${visited.size < targets.length ? ` (missing: ${targets.filter((_, index) => !visited.has(index)).map((target) => target.name).join(', ')})` : ''}`);
+}
+
 try {
+  fs.mkdirSync(SHOTS, { recursive: true });
   s = await launch(profile, server);
   await assertHermetic(s, check);
   await rpc(s, 'wipeData');
@@ -36,8 +97,8 @@ try {
   await rpc(s, 'startSync', { mode: 'full' });
   await waitSync(s, terminal, 'the sync that fills the library', 60_000);
   check((await rpc(s, 'getStats')).items === exp.items, `the library holds ${exp.items} videos from a real sync of the mock`);
-  // a hostile caption, to prove captions are only ever text
-  await rpc(s, 'upsertBatch', { items: [{ platform: 'tiktok', externalId: '99999', authorHandle: 'evil', caption: '<img src=x onerror="window.__pwned=1"> hello <script>window.__pwned=2</script> xss', hashtags: ['xss'], savedAt: 1, savedAtSource: 'exact' }] });
+  // Hostile markup and long unbroken text prove captions stay text and cannot stretch the panel.
+  await rpc(s, 'upsertBatch', { items: [{ platform: 'tiktok', externalId: '99999', authorHandle: `evil_${'longauthor'.repeat(12)}`, caption: `<img src=x onerror="window.__pwned=1"> hello <script>window.__pwned=2</script> xss ${'unbrokencaption'.repeat(40)}`, hashtags: ['xss'], savedAt: 1, savedAtSource: 'exact' }] });
 
   const id = await extensionId(s);
   const panel = await s.ctx.newPage();
@@ -129,6 +190,18 @@ try {
   const evilRow = (await panel.locator('[data-testid="result"]').first().textContent()) ?? '';
   check(evilRow.includes('<img src=x') || evilRow.includes('<script>'), `a caption with HTML in it is shown as plain text: "${evilRow.trim().slice(0, 100)}"`);
   check((await panel.locator('.result img[src="x"]').count()) === 0 && (await panel.evaluate('window.__pwned')) === undefined, 'and nothing in it was ever executed or turned into an element');
+  const longCategory = 'unbrokencategory'.repeat(4); // 60 characters: within the contract's 64-character limit.
+  await typeChip(panel, longCategory);
+  for (const colorScheme of ['light', 'dark'] as const) {
+    await panel.emulateMedia({ colorScheme });
+    for (const width of [360, 480]) {
+      await panel.setViewportSize({ width, height: 900 });
+      await checkPanelWidth(panel, `hostile caption, long author and pending long chip, ${width}px ${colorScheme}`);
+    }
+  }
+  await panel.getByRole('button', { name: `Remove the category ${longCategory}` }).click();
+  await panel.emulateMedia({ colorScheme: 'light' });
+  await panel.setViewportSize({ width: 420, height: 900 });
 
   // ---------------------------------------------------------------- browsing and paging
   await panel.getByRole('button', { name: 'Remove the category xss' }).click();
@@ -158,6 +231,31 @@ try {
   check(true, `Enter in an empty box searches: ${await text(panel, 'count')}`);
   check((await panel.locator('[role="status"][aria-live="polite"]').count()) > 0, 'result counts are announced to screen readers (aria-live)');
   await panel.screenshot({ path: path.join(SHOTS, 'panel-results-light.png') }).catch(() => undefined);
+  await panel.emulateMedia({ colorScheme: 'dark' });
+  await panel.screenshot({ path: path.join(SHOTS, 'panel-results-dark.png') });
+
+  // Include the complete cards and their metadata/actions in the visual review artifacts.
+  for (const colorScheme of ['light', 'dark'] as const) {
+    await panel.emulateMedia({ colorScheme });
+    await panel.locator('.results-section').evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await panel.screenshot({ path: path.join(SHOTS, `panel-grid-${colorScheme}.png`) });
+  }
+  await panel.evaluate('window.scrollTo(0, 0)');
+
+  // The same real travel search in both themes and the narrow/wide side-panel widths.
+  for (const colorScheme of ['light', 'dark'] as const) {
+    await panel.emulateMedia({ colorScheme });
+    for (const width of [360, 480]) {
+      await panel.setViewportSize({ width, height: 900 });
+      const state = `travel results, ${width}px ${colorScheme}`;
+      await checkPanelWidth(panel, state);
+      await checkKeyboardFocus(panel, state);
+      await panel.evaluate('window.scrollTo(0, 0)');
+      await panel.screenshot({ path: path.join(SHOTS, `panel-results-${colorScheme}-${width}.png`), fullPage: false });
+    }
+  }
+  await panel.emulateMedia({ colorScheme: 'light' });
+  await panel.setViewportSize({ width: 420, height: 900 });
 
   // ---------------------------------------------------------------- preferences persist
   await panel.getByLabel('Include related words').uncheck();
@@ -246,7 +344,7 @@ try {
 
   // ---------------------------------------------------------------- dark mode
   await panel.emulateMedia({ colorScheme: 'dark' });
-  await panel.screenshot({ path: path.join(SHOTS, 'panel-results-dark.png') }).catch(() => undefined);
+  await panel.screenshot({ path: path.join(SHOTS, 'panel-browse-dark.png') }).catch(() => undefined);
 
   check(clientErrors.length === 0, clientErrors.length === 0 ? 'no script errors in the panel during the whole run' : `script errors in the panel: ${clientErrors.slice(0, 3).join(' | ')}`);
   void syncStatus;

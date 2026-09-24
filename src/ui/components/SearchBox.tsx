@@ -34,23 +34,30 @@ export function SearchBox(p: SearchBoxProps) {
       role="search"
       onSubmit={(e) => { e.preventDefault(); p.onSearch(); }}
     >
+      <div class="search-heading">
+        <h2>Categories</h2>
+        <p class="search-help">Add categories with Enter or a comma, then press Search.</p>
+      </div>
       <div class="searchrow">
-        <input
-          id="category-input"
-          class="input"
-          type="text"
-          value={q.input}
-          autocomplete="off"
-          spellcheck={false}
-          placeholder="Type a category, press Enter"
-          aria-label="Add a category to search for"
-          onInput={(e) => p.onInput((e.currentTarget as HTMLInputElement).value)}
-          onPaste={(e) => { if (p.onPaste(e.clipboardData?.getData('text') ?? '')) e.preventDefault(); }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') { e.preventDefault(); p.onEnter(); }
-            else if (e.key === 'Backspace' && (e.currentTarget as HTMLInputElement).value === '') p.onBackspaceEmpty();
-          }}
-        />
+        <div class="search-input-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 4.5 4.5" stroke-linecap="round" /></svg>
+          <input
+            id="category-input"
+            class="input"
+            type="text"
+            value={q.input}
+            autocomplete="off"
+            spellcheck={false}
+            placeholder="Type a category, press Enter"
+            aria-label="Add a category to search for"
+            onInput={(e) => p.onInput((e.currentTarget as HTMLInputElement).value)}
+            onPaste={(e) => { if (p.onPaste(e.clipboardData?.getData('text') ?? '')) e.preventDefault(); }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') { e.preventDefault(); p.onEnter(); }
+              else if (e.key === 'Backspace' && (e.currentTarget as HTMLInputElement).value === '') p.onBackspaceEmpty();
+            }}
+          />
+        </div>
         <button class="btn primary" type="submit" disabled={p.busy}>Search</button>
       </div>
 
@@ -73,9 +80,9 @@ export function SearchBox(p: SearchBoxProps) {
           <label class={q.mode === 'all' ? 'seg on' : 'seg'}><input type="radio" name="mode" checked={q.mode === 'all'} onChange={() => p.onMode('all')} /> All categories</label>
           <label class={q.mode === 'any' ? 'seg on' : 'seg'}><input type="radio" name="mode" checked={q.mode === 'any'} onChange={() => p.onMode('any')} /> Any category</label>
         </fieldset>
-        <label class="check"><input type="checkbox" checked={allExpand} onChange={(e) => p.onExpandAll((e.currentTarget as HTMLInputElement).checked)} /> Include related words</label>
+        <label class="check related-toggle"><input type="checkbox" checked={allExpand} onChange={(e) => p.onExpandAll((e.currentTarget as HTMLInputElement).checked)} /> Include related words</label>
         <label class="sort">
-          <span class="sr-only">Sort by</span>
+          <span class="sort-label">Sort</span>
           <select value={q.sort} onChange={(e) => p.onSort((e.currentTarget as HTMLSelectElement).value as SearchSort)} aria-label="Sort by">
             {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>

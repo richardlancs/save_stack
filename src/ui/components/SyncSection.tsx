@@ -28,10 +28,11 @@ export function SyncSection(p: SyncSectionProps) {
 
   return (
     <section class={`sync tone-${view.tone}`} aria-label="Sync">
+      <p class="sync-eyebrow"><span class="status-dot" aria-hidden="true" />Library sync</p>
       <div class="sync-head">
-        <div>
+        <div class="sync-copy">
           <p class="sync-title" data-testid="sync-headline">{view.headline}</p>
-          {view.detail ? <p class="muted">{view.detail}</p> : null}
+          {view.detail ? <p class="muted sync-detail">{view.detail}</p> : null}
         </div>
         <div class="sync-buttons">
           {view.buttons.map((b) => (
@@ -51,10 +52,10 @@ export function SyncSection(p: SyncSectionProps) {
       {view.warnings.length > 0 ? <ul class="warnings" aria-label="Notes">{view.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul> : null}
 
       {canStart ? (
-        <label class="check small"><input type="checkbox" checked={full} onChange={(e) => setFull((e.currentTarget as HTMLInputElement).checked)} /> Full re-sync (also notice videos you have un-saved)</label>
+        <label class="check small sync-full"><input type="checkbox" checked={full} onChange={(e) => setFull((e.currentTarget as HTMLInputElement).checked)} /> Full re-sync (also notice videos you have un-saved)</label>
       ) : null}
       {p.state && (p.state.status === 'running' || p.state.status === 'paused' || p.state.status === 'needs_attention') ? (
-        <p class="muted small">Keep the sync window visible while it works: a hidden window cannot be scrolled.</p>
+        <p class="muted small sync-reminder">Keep the sync window visible while it works: a hidden window cannot be scrolled.</p>
       ) : null}
     </section>
   );

@@ -14,8 +14,16 @@ function Snippet({ segments }: { segments: HighlightSegment[] }) {
 
 function Thumb({ url, alt, kind }: { url?: string; alt: string; kind: 'video' | 'photo' }) {
   const [broken, setBroken] = useState(false);
-  // A platform's thumbnail links can expire (TikTok's after about two days): a dead image is normal, never an error.
-  if (!url || broken) return <div class="thumb placeholder" role="img" aria-label={alt}>{kind === 'photo' ? 'Photo' : 'Video'}</div>;
+  // Thumbnail links can expire: a dead image is normal, never an error.
+  if (!url || broken) return (
+    <div class="thumb placeholder" role="img" aria-label={alt}>
+      <svg class="placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" aria-hidden="true">
+        <rect x="3" y="3" width="18" height="18" rx="3" />
+        {kind === 'photo' ? <><circle cx="8.5" cy="8.5" r="1.5" /><path d="m4 18 5-5 3 3 4-5 4 5" /></> : <path d="m10 8 6 4-6 4V8Z" />}
+      </svg>
+      <span>{kind === 'photo' ? 'Photo' : 'Video'}</span>
+    </div>
+  );
   return <img class="thumb" src={url} alt="" loading="lazy" referrerpolicy="no-referrer" onError={() => setBroken(true)} />;
 }
 
@@ -52,16 +60,29 @@ export function ResultRow({ result, chips, url, explain }: ResultRowProps) {
 
   return (
     <li class={item.available ? 'result' : 'result gone'} data-testid="result">
-      <Thumb key={item.thumbnailUrl ?? ''} url={item.thumbnailUrl} alt={alt} kind={item.mediaType} />
+      <div class="result-media">
+        <Thumb key={item.thumbnailUrl ?? ''} url={item.thumbnailUrl} alt={alt} kind={item.mediaType} />
+        {item.mediaType === 'photo' ? (
+          <span class="media-kind" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="3" width="11" height="11" rx="2" /><path d="M3 6v9a2 2 0 0 0 2 2h9" /></svg>
+          </span>
+        ) : null}
+        {item.durationSec !== undefined || item.stats?.views !== undefined ? (
+          <p class="media-stats">
+            {item.stats?.views !== undefined ? <span class="media-views"><svg viewBox="0 0 12 14" fill="currentColor" aria-hidden="true"><path d="m2 1 9 6-9 6V1Z" /></svg>{formatCompact(item.stats.views)} views</span> : null}
+            {item.durationSec !== undefined ? <span class="media-duration">{formatDuration(item.durationSec)}</span> : null}
+          </p>
+        ) : null}
+      </div>
       <div class="result-body">
+        <p class="author">@{item.authorHandle}</p>
         <Snippet segments={result.snippet.length > 0 ? result.snippet : [{ text: item.caption ?? '', hit: false }]} />
-        <p class="meta">
-          <span class="author">@{item.authorHandle}</span>
-          {item.durationSec !== undefined ? <span>{formatDuration(item.durationSec)}</span> : null}
-          {item.stats?.views !== undefined ? <span>{formatCompact(item.stats.views)} views</span> : null}
-          {saved ? <span>{saved}</span> : null}
-          {!item.available ? <span class="badge">No longer saved</span> : null}
-        </p>
+        {saved || !item.available ? (
+          <p class="meta result-meta">
+            {saved ? <span>{saved}</span> : null}
+            {!item.available ? <span class="badge">No longer saved</span> : null}
+          </p>
+        ) : null}
         {item.collections.length > 0 ? (
           <p class="tags">{item.collections.map((c) => <span class="tag" key={c.externalId}>{c.name}</span>)}</p>
         ) : null}
