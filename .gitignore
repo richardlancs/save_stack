@@ -1,0 +1,13 @@
+node_modules/
+.output/
+.wxt/
+dist/
+*.log
+.playwright-install.log
+.env
+.env.*
+bench/.tmp/
+coverage/
+
+# local spike logs / profiles
+bench/.spike-*.log

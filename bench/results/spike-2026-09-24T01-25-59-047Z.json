@@ -1,0 +1,1312 @@
+{
+  "browser": "153.0.8010.12",
+  "options": {},
+  "full": {
+    "options": {
+      "items": 50000,
+      "variantItems": 15000,
+      "seed": 1337,
+      "runs": 25,
+      "batchSize": 1000,
+      "mainVariant": "C"
+    },
+    "open": {
+      "wasmInitMs": 57.6,
+      "vfsInstallMs": 71.6
+    },
+    "generateMs": 171.8,
+    "variants": [
+      {
+        "variant": "A: defaults (journal=DELETE, sync=FULL)",
+        "itemsPerSec": 2657,
+        "ingestMs": 5645.7,
+        "size": {
+          "pageSize": 8192,
+          "pages": 3744,
+          "totalMB": 29.25,
+          "byObjectMB": {
+            "items": 10.73,
+            "items_tri_data": 5.88,
+            "items_fts_data": 5.07,
+            "items_fts_content": 3.27,
+            "sqlite_autoindex_items_1": 0.56,
+            "item_hashtags": 0.54,
+            "idx_ih_tag": 0.52,
+            "idx_items_seen": 0.39,
+            "idx_items_posted": 0.34,
+            "idx_items_author": 0.29,
+            "idx_ic_collection": 0.27,
+            "item_collections": 0.27,
+            "items_tri_docsize": 0.2,
+            "items_fts_docsize": 0.2
+          }
+        },
+        "trigram": "contentless-delete"
+      },
+      {
+        "variant": "B: journal=TRUNCATE, sync=NORMAL",
+        "itemsPerSec": 2509,
+        "ingestMs": 5977.7,
+        "size": {
+          "pageSize": 8192,
+          "pages": 3744,
+          "totalMB": 29.25,
+          "byObjectMB": {
+            "items": 10.73,
+            "items_tri_data": 5.88,
+            "items_fts_data": 5.07,
+            "items_fts_content": 3.27,
+            "sqlite_autoindex_items_1": 0.56,
+            "item_hashtags": 0.54,
+            "idx_ih_tag": 0.52,
+            "idx_items_seen": 0.39,
+            "idx_items_posted": 0.34,
+            "idx_items_author": 0.29,
+            "idx_ic_collection": 0.27,
+            "item_collections": 0.27,
+            "items_tri_docsize": 0.2,
+            "items_fts_docsize": 0.2
+          }
+        },
+        "trigram": "contentless-delete"
+      },
+      {
+        "variant": "C: journal=TRUNCATE, sync=NORMAL, exclusive lock, 64MB cache, temp in memory",
+        "itemsPerSec": 2656,
+        "ingestMs": 5647.3,
+        "size": {
+          "pageSize": 8192,
+          "pages": 3744,
+          "totalMB": 29.25,
+          "byObjectMB": {
+            "items": 10.73,
+            "items_tri_data": 5.88,
+            "items_fts_data": 5.07,
+            "items_fts_content": 3.27,
+            "sqlite_autoindex_items_1": 0.56,
+            "item_hashtags": 0.54,
+            "idx_ih_tag": 0.52,
+            "idx_items_seen": 0.39,
+            "idx_items_posted": 0.34,
+            "idx_items_author": 0.29,
+            "idx_ic_collection": 0.27,
+            "item_collections": 0.27,
+            "items_tri_docsize": 0.2,
+            "items_fts_docsize": 0.2
+          }
+        },
+        "trigram": "contentless-delete"
+      },
+      {
+        "variant": "D: C + journal_mode=MEMORY (crash-unsafe reference)",
+        "itemsPerSec": 2780,
+        "ingestMs": 5396.4,
+        "size": {
+          "pageSize": 8192,
+          "pages": 3744,
+          "totalMB": 29.25,
+          "byObjectMB": {
+            "items": 10.73,
+            "items_tri_data": 5.88,
+            "items_fts_data": 5.07,
+            "items_fts_content": 3.27,
+            "sqlite_autoindex_items_1": 0.56,
+            "item_hashtags": 0.54,
+            "idx_ih_tag": 0.52,
+            "idx_items_seen": 0.39,
+            "idx_items_posted": 0.34,
+            "idx_items_author": 0.29,
+            "idx_ic_collection": 0.27,
+            "item_collections": 0.27,
+            "items_tri_docsize": 0.2,
+            "items_fts_docsize": 0.2
+          }
+        },
+        "trigram": "contentless-delete"
+      },
+      {
+        "variant": "E: C + page_size=8192",
+        "itemsPerSec": 2644,
+        "ingestMs": 5673.1,
+        "size": {
+          "pageSize": 8192,
+          "pages": 3744,
+          "totalMB": 29.25,
+          "byObjectMB": {
+            "items": 10.73,
+            "items_tri_data": 5.88,
+            "items_fts_data": 5.07,
+            "items_fts_content": 3.27,
+            "sqlite_autoindex_items_1": 0.56,
+            "item_hashtags": 0.54,
+            "idx_ih_tag": 0.52,
+            "idx_items_seen": 0.39,
+            "idx_items_posted": 0.34,
+            "idx_items_author": 0.29,
+            "idx_ic_collection": 0.27,
+            "item_collections": 0.27,
+            "items_tri_docsize": 0.2,
+            "items_fts_docsize": 0.2
+          }
+        },
+        "trigram": "contentless-delete"
+      },
+      {
+        "variant": "F: C + page_size=16384",
+        "itemsPerSec": 2622,
+        "ingestMs": 5721.7,
+        "size": {
+          "pageSize": 16384,
+          "pages": 1867,
+          "totalMB": 29.17,
+          "byObjectMB": {
+            "items": 10.47,
+            "items_tri_data": 5.88,
+            "items_fts_data": 5.11,
+            "items_fts_content": 3.25,
+            "sqlite_autoindex_items_1": 0.58,
+            "item_hashtags": 0.55,
+            "idx_ih_tag": 0.53,
+            "idx_items_seen": 0.38,
+            "idx_items_posted": 0.34,
+            "idx_items_author": 0.28,
+            "item_collections": 0.27,
+            "idx_ic_collection": 0.27,
+            "items_tri_docsize": 0.2,
+            "items_fts_docsize": 0.2
+          }
+        },
+        "trigram": "contentless-delete"
+      }
+    ],
+    "schemaMatrix": [
+      {
+        "label": "trigram + full columns",
+        "itemsPerSec": 2718,
+        "totalMB": 29.25,
+        "bytesPerItem": 2045
+      },
+      {
+        "label": "no trigram + full columns",
+        "itemsPerSec": 3984,
+        "totalMB": 23.14,
+        "bytesPerItem": 1618
+      },
+      {
+        "label": "no trigram + lean (no url/raw_json)",
+        "itemsPerSec": 4331,
+        "totalMB": 17.2,
+        "bytesPerItem": 1202
+      },
+      {
+        "label": "trigram + lean",
+        "itemsPerSec": 3259,
+        "totalMB": 23.31,
+        "bytesPerItem": 1629
+      }
+    ],
+    "schema": {
+      "trigram": "contentless-delete",
+      "notes": []
+    },
+    "environment": {
+      "sqliteVersion": "3.53.4",
+      "compileOptionsOfInterest": [
+        "ENABLE_DBSTAT_VTAB",
+        "ENABLE_FTS5",
+        "ENABLE_MATH_FUNCTIONS",
+        "THREADSAFE=0"
+      ],
+      "fts5Tokenizers": "porter unicode61 trigram (verified by schema creation)",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "hardwareConcurrency": 16,
+      "crossOriginIsolated": false,
+      "hasSharedArrayBuffer": true
+    },
+    "mainVariant": "C: journal=TRUNCATE, sync=NORMAL, exclusive lock, 64MB cache, temp in memory",
+    "ingestNew": {
+      "ms": 19112.9,
+      "itemsPerSec": 2616,
+      "inserted": 50000,
+      "touched": 0,
+      "reindexed": 0
+    },
+    "sizeAfterIngest": {
+      "pageSize": 8192,
+      "pages": 12367,
+      "totalMB": 96.62,
+      "byObjectMB": {
+        "items": 35.75,
+        "items_tri_data": 19.04,
+        "items_fts_data": 16.29,
+        "items_fts_content": 10.87,
+        "sqlite_autoindex_items_1": 1.89,
+        "item_hashtags": 1.85,
+        "idx_ih_tag": 1.8,
+        "idx_items_seen": 1.35,
+        "idx_items_posted": 1.11,
+        "idx_items_author": 0.97,
+        "item_collections": 0.89,
+        "idx_ic_collection": 0.88,
+        "items_tri_docsize": 0.66,
+        "items_fts_docsize": 0.66
+      }
+    },
+    "rowCounts": {
+      "items": 50000,
+      "collections": 20,
+      "item_collections": 66649,
+      "hashtags": 8295,
+      "item_hashtags": 177151
+    },
+    "queriesPreOptimize": [
+      {
+        "id": "W01",
+        "label": "1 chip: \"food\" (+related)",
+        "total": 11211,
+        "page": 30,
+        "chipCounts": [
+          11211
+        ],
+        "ms": {
+          "n": 15,
+          "mean": 29.46,
+          "p50": 29,
+          "p95": 34,
+          "max": 34
+        },
+        "meanComponentsMs": {
+          "candidates": 19.52,
+          "total": 3.55,
+          "hydrate": 1.37,
+          "facets": 2.16,
+          "attribution": 2.78
+        }
+      },
+      {
+        "id": "W03",
+        "label": "5 chips AND: food dinner easy quick chicken",
+        "total": 8,
+        "page": 8,
+        "chipCounts": [
+          11211,
+          4861,
+          3509,
+          3495,
+          2466
+        ],
+        "ms": {
+          "n": 15,
+          "mean": 24.71,
+          "p50": 24.5,
+          "p95": 27,
+          "max": 27
+        },
+        "meanComponentsMs": {
+          "candidates": 7.37,
+          "total": 3.08,
+          "chipCounts": 5.13,
+          "hydrate": 0.59,
+          "facets": 0.23,
+          "attribution": 8.25
+        }
+      },
+      {
+        "id": "W07",
+        "label": "ubiquitous term: \"fyp\"",
+        "total": 6741,
+        "page": 30,
+        "chipCounts": [
+          6741
+        ],
+        "ms": {
+          "n": 15,
+          "mean": 10.45,
+          "p50": 10.3,
+          "p95": 12.4,
+          "max": 12.4
+        },
+        "meanComponentsMs": {
+          "candidates": 6.11,
+          "total": 0.48,
+          "hydrate": 0.92,
+          "facets": 1.35,
+          "attribution": 1.56
+        }
+      }
+    ],
+    "ftsOptimizeMs": 366.9,
+    "sizeAfterOptimize": {
+      "pageSize": 8192,
+      "pages": 12804,
+      "totalMB": 100.03,
+      "byObjectMB": {
+        "items": 35.75,
+        "items_tri_data": 19.04,
+        "items_fts_data": 16.02,
+        "items_fts_content": 10.87,
+        "sqlite_autoindex_items_1": 1.89,
+        "item_hashtags": 1.85,
+        "idx_ih_tag": 1.8,
+        "idx_items_seen": 1.35,
+        "idx_items_posted": 1.11,
+        "idx_items_author": 0.97,
+        "item_collections": 0.89,
+        "idx_ic_collection": 0.88,
+        "items_tri_docsize": 0.66,
+        "items_fts_docsize": 0.66
+      }
+    },
+    "resyncUnchanged": {
+      "ms": 2477.1,
+      "itemsPerSec": 20185,
+      "inserted": 0,
+      "touched": 50000,
+      "reindexed": 0
+    },
+    "resyncTextChanged": {
+      "ms": 1481.5,
+      "itemsPerSec": 3375,
+      "inserted": 0,
+      "touched": 0,
+      "reindexed": 5000
+    },
+    "queries": [
+      {
+        "id": "W01",
+        "label": "1 chip: \"food\" (+related)",
+        "total": 11211,
+        "page": 30,
+        "chipCounts": [
+          11211
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 28.07,
+          "p50": 27.8,
+          "p95": 29.9,
+          "max": 30.1
+        },
+        "meanComponentsMs": {
+          "candidates": 19.72,
+          "total": 3.44,
+          "hydrate": 1.32,
+          "facets": 2.04,
+          "attribution": 1.47
+        }
+      },
+      {
+        "id": "W02",
+        "label": "2 chips AND: food + easy",
+        "total": 851,
+        "page": 30,
+        "chipCounts": [
+          11211,
+          3509
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 21.12,
+          "p50": 20.6,
+          "p95": 27.1,
+          "max": 28.7
+        },
+        "meanComponentsMs": {
+          "candidates": 7.48,
+          "total": 2.65,
+          "chipCounts": 3.84,
+          "hydrate": 1.62,
+          "facets": 2.14,
+          "attribution": 3.3
+        }
+      },
+      {
+        "id": "W03",
+        "label": "5 chips AND: food dinner easy quick chicken",
+        "total": 8,
+        "page": 8,
+        "chipCounts": [
+          11211,
+          4861,
+          3509,
+          3495,
+          2466
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 24.62,
+          "p50": 24.2,
+          "p95": 29.6,
+          "max": 30.7
+        },
+        "meanComponentsMs": {
+          "candidates": 7.22,
+          "total": 2.85,
+          "chipCounts": 5.12,
+          "hydrate": 0.64,
+          "facets": 0.24,
+          "attribution": 8.44
+        }
+      },
+      {
+        "id": "W04",
+        "label": "4 chips ANY: makeup skincare hair fashion",
+        "total": 18731,
+        "page": 30,
+        "chipCounts": [
+          7738,
+          4387,
+          3365,
+          5017
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 181.56,
+          "p50": 179.5,
+          "p95": 194.4,
+          "max": 200.8
+        },
+        "meanComponentsMs": {
+          "candidates": 42.19,
+          "total": 8.67,
+          "chipCounts": 6.77,
+          "hydrate": 1.52,
+          "facets": 2.26,
+          "attribution": 119.85
+        }
+      },
+      {
+        "id": "W05",
+        "label": "5 chips ANY (broad): food makeup fitness travel fashion",
+        "total": 31367,
+        "page": 30,
+        "chipCounts": [
+          11211,
+          7738,
+          6324,
+          5244,
+          5017
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 261.86,
+          "p50": 261.2,
+          "p95": 273.3,
+          "max": 284.8
+        },
+        "meanComponentsMs": {
+          "candidates": 78.86,
+          "total": 15.57,
+          "chipCounts": 11.44,
+          "hydrate": 1.39,
+          "facets": 2.09,
+          "attribution": 152.39
+        }
+      },
+      {
+        "id": "W06",
+        "label": "rare term: \"airfryer\"",
+        "total": 2481,
+        "page": 30,
+        "chipCounts": [
+          2481
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 11.11,
+          "p50": 10.5,
+          "p95": 13,
+          "max": 17.8
+        },
+        "meanComponentsMs": {
+          "candidates": 3.2,
+          "total": 0.31,
+          "hydrate": 1.08,
+          "facets": 1.95,
+          "attribution": 4.53
+        }
+      },
+      {
+        "id": "W07",
+        "label": "ubiquitous term: \"fyp\"",
+        "total": 6741,
+        "page": 30,
+        "chipCounts": [
+          6741
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 11.26,
+          "p50": 11,
+          "p95": 13.9,
+          "max": 14.4
+        },
+        "meanComponentsMs": {
+          "candidates": 6.36,
+          "total": 0.58,
+          "hydrate": 1.02,
+          "facets": 1.65,
+          "attribution": 1.6
+        }
+      },
+      {
+        "id": "W08",
+        "label": "collection-name chip: \"recipes\"",
+        "total": 9497,
+        "page": 30,
+        "chipCounts": [
+          9497
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 29.36,
+          "p50": 28.9,
+          "p95": 32.7,
+          "max": 37.7
+        },
+        "meanComponentsMs": {
+          "candidates": 9.53,
+          "total": 1.02,
+          "hydrate": 1.22,
+          "facets": 2.16,
+          "attribution": 15.38
+        }
+      },
+      {
+        "id": "W09",
+        "label": "multiword chip: \"meal prep\"",
+        "total": 3183,
+        "page": 30,
+        "chipCounts": [
+          3183
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 12.76,
+          "p50": 12.6,
+          "p95": 15.2,
+          "max": 16.5
+        },
+        "meanComponentsMs": {
+          "candidates": 4.15,
+          "total": 0.42,
+          "hydrate": 1.17,
+          "facets": 1.92,
+          "attribution": 5.06
+        }
+      },
+      {
+        "id": "W10",
+        "label": "sort by views: food",
+        "total": 11211,
+        "page": 30,
+        "chipCounts": [
+          11211
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 25.38,
+          "p50": 24.8,
+          "p95": 28.4,
+          "max": 33.6
+        },
+        "meanComponentsMs": {
+          "candidates": 10.3,
+          "total": 3.25,
+          "hydrate": 1.49,
+          "facets": 0.36,
+          "attribution": 9.92
+        }
+      },
+      {
+        "id": "W11",
+        "label": "sort recently saved: food + easy",
+        "total": 851,
+        "page": 30,
+        "chipCounts": [
+          11211,
+          3509
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 14.51,
+          "p50": 14.6,
+          "p95": 15.9,
+          "max": 17.4
+        },
+        "meanComponentsMs": {
+          "candidates": 3.36,
+          "total": 2.45,
+          "chipCounts": 3.6,
+          "hydrate": 1.19,
+          "facets": 0.37,
+          "attribution": 3.47
+        }
+      },
+      {
+        "id": "W12",
+        "label": "no chips: browse all (recently saved)",
+        "total": 50000,
+        "page": 30,
+        "chipCounts": [],
+        "ms": {
+          "n": 25,
+          "mean": 1.14,
+          "p50": 1,
+          "p95": 2.1,
+          "max": 4.6
+        },
+        "meanComponentsMs": {
+          "page": 0.06,
+          "total": 0.07,
+          "hydrate": 1
+        }
+      },
+      {
+        "id": "W13",
+        "label": "zero-result chip: \"makup\" (typo)",
+        "total": 0,
+        "page": 0,
+        "chipCounts": [
+          0
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 0.2,
+          "p50": 0.2,
+          "p95": 0.4,
+          "max": 0.4
+        },
+        "meanComponentsMs": {
+          "candidates": 0.07,
+          "total": 0.03,
+          "hydrate": 0.05,
+          "facets": 0.04,
+          "attribution": 0
+        }
+      },
+      {
+        "id": "W14",
+        "label": "prefix: single letter-pair \"fo\"",
+        "total": 19443,
+        "page": 30,
+        "chipCounts": [
+          19443
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 23.74,
+          "p50": 23.2,
+          "p95": 26.4,
+          "max": 26.8
+        },
+        "meanComponentsMs": {
+          "candidates": 15.78,
+          "total": 1.28,
+          "hydrate": 1.31,
+          "facets": 2.08,
+          "attribution": 3.22
+        }
+      }
+    ],
+    "queriesAttributionJsonIn": [
+      {
+        "id": "W01",
+        "label": "1 chip: \"food\" (+related)",
+        "total": 11211,
+        "page": 30,
+        "chipCounts": [
+          11211
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 45.36,
+          "p50": 45,
+          "p95": 49.2,
+          "max": 51.7
+        },
+        "meanComponentsMs": {
+          "candidates": 19.46,
+          "total": 3.36,
+          "hydrate": 1.42,
+          "facets": 2.06,
+          "attribution": 18.98
+        }
+      },
+      {
+        "id": "W03",
+        "label": "5 chips AND: food dinner easy quick chicken",
+        "total": 8,
+        "page": 8,
+        "chipCounts": [
+          11211,
+          4861,
+          3509,
+          3495,
+          2466
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 26.59,
+          "p50": 26.2,
+          "p95": 29,
+          "max": 29.2
+        },
+        "meanComponentsMs": {
+          "candidates": 7.23,
+          "total": 2.82,
+          "chipCounts": 4.75,
+          "hydrate": 0.58,
+          "facets": 0.22,
+          "attribution": 10.92
+        }
+      },
+      {
+        "id": "W05",
+        "label": "5 chips ANY (broad): food makeup fitness travel fashion",
+        "total": 31367,
+        "page": 30,
+        "chipCounts": [
+          11211,
+          7738,
+          6324,
+          5244,
+          5017
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 273.27,
+          "p50": 267.6,
+          "p95": 289.9,
+          "max": 379.9
+        },
+        "meanComponentsMs": {
+          "candidates": 78.52,
+          "total": 15.46,
+          "chipCounts": 10.94,
+          "hydrate": 4.34,
+          "facets": 2.17,
+          "attribution": 161.71
+        }
+      }
+    ],
+    "queriesNoAttribution": [
+      {
+        "id": "W01",
+        "label": "1 chip: \"food\" (+related)",
+        "total": 11211,
+        "page": 30,
+        "chipCounts": [
+          11211
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 26.17,
+          "p50": 26,
+          "p95": 27.9,
+          "max": 28.1
+        },
+        "meanComponentsMs": {
+          "candidates": 19.52,
+          "total": 3.37,
+          "hydrate": 1.28,
+          "facets": 1.94
+        }
+      },
+      {
+        "id": "W03",
+        "label": "5 chips AND: food dinner easy quick chicken",
+        "total": 8,
+        "page": 8,
+        "chipCounts": [
+          11211,
+          4861,
+          3509,
+          3495,
+          2466
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 15.63,
+          "p50": 15.8,
+          "p95": 17.4,
+          "max": 18.2
+        },
+        "meanComponentsMs": {
+          "candidates": 7.24,
+          "total": 2.87,
+          "chipCounts": 4.73,
+          "hydrate": 0.54,
+          "facets": 0.2
+        }
+      },
+      {
+        "id": "W05",
+        "label": "5 chips ANY (broad): food makeup fitness travel fashion",
+        "total": 31367,
+        "page": 30,
+        "chipCounts": [
+          11211,
+          7738,
+          6324,
+          5244,
+          5017
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 108.79,
+          "p50": 107.3,
+          "p95": 113.7,
+          "max": 142.6
+        },
+        "meanComponentsMs": {
+          "candidates": 79.07,
+          "total": 15.56,
+          "chipCounts": 10.9,
+          "hydrate": 1.2,
+          "facets": 1.94
+        }
+      },
+      {
+        "id": "W07",
+        "label": "ubiquitous term: \"fyp\"",
+        "total": 6741,
+        "page": 30,
+        "chipCounts": [
+          6741
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 9.14,
+          "p50": 8.9,
+          "p95": 10.5,
+          "max": 11.8
+        },
+        "meanComponentsMs": {
+          "candidates": 6.21,
+          "total": 0.48,
+          "hydrate": 0.94,
+          "facets": 1.45
+        }
+      }
+    ],
+    "queriesCappedTotal": [
+      {
+        "id": "W01",
+        "label": "1 chip: \"food\" (+related)",
+        "total": 10001,
+        "page": 30,
+        "chipCounts": [
+          10001
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 27.67,
+          "p50": 27.2,
+          "p95": 33.3,
+          "max": 33.4
+        },
+        "meanComponentsMs": {
+          "candidates": 19.54,
+          "total": 3.22,
+          "hydrate": 1.24,
+          "facets": 2.15,
+          "attribution": 1.46
+        }
+      },
+      {
+        "id": "W05",
+        "label": "5 chips ANY (broad): food makeup fitness travel fashion",
+        "total": 10001,
+        "page": 30,
+        "chipCounts": [
+          11211,
+          7738,
+          6324,
+          5244,
+          5017
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 252.23,
+          "p50": 251.8,
+          "p95": 264.4,
+          "max": 266.4
+        },
+        "meanComponentsMs": {
+          "candidates": 79.94,
+          "total": 7.41,
+          "chipCounts": 11.21,
+          "hydrate": 1.52,
+          "facets": 2.32,
+          "attribution": 149.75
+        }
+      },
+      {
+        "id": "W07",
+        "label": "ubiquitous term: \"fyp\"",
+        "total": 6741,
+        "page": 30,
+        "chipCounts": [
+          6741
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 10.74,
+          "p50": 10.5,
+          "p95": 12.5,
+          "max": 12.6
+        },
+        "meanComponentsMs": {
+          "candidates": 6.25,
+          "total": 0.52,
+          "hydrate": 0.88,
+          "facets": 1.48,
+          "attribution": 1.57
+        }
+      }
+    ],
+    "queriesCandidates100": [
+      {
+        "id": "W01",
+        "label": "1 chip: \"food\" (+related)",
+        "total": 11211,
+        "page": 30,
+        "chipCounts": [
+          11211
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 25.87,
+          "p50": 25.5,
+          "p95": 29.3,
+          "max": 35.2
+        },
+        "meanComponentsMs": {
+          "candidates": 18.63,
+          "total": 3.34,
+          "hydrate": 1.59,
+          "facets": 0.84,
+          "attribution": 1.4
+        }
+      },
+      {
+        "id": "W03",
+        "label": "5 chips AND: food dinner easy quick chicken",
+        "total": 8,
+        "page": 8,
+        "chipCounts": [
+          11211,
+          4861,
+          3509,
+          3495,
+          2466
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 23.18,
+          "p50": 23.2,
+          "p95": 25.4,
+          "max": 27
+        },
+        "meanComponentsMs": {
+          "candidates": 7.02,
+          "total": 2.85,
+          "chipCounts": 4.76,
+          "hydrate": 0.59,
+          "facets": 0.19,
+          "attribution": 7.69
+        }
+      },
+      {
+        "id": "W05",
+        "label": "5 chips ANY (broad): food makeup fitness travel fashion",
+        "total": 31367,
+        "page": 30,
+        "chipCounts": [
+          11211,
+          7738,
+          6324,
+          5244,
+          5017
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 259.49,
+          "p50": 260.6,
+          "p95": 270.5,
+          "max": 270.7
+        },
+        "meanComponentsMs": {
+          "candidates": 78.24,
+          "total": 15.93,
+          "chipCounts": 11.15,
+          "hydrate": 1.36,
+          "facets": 0.95,
+          "attribution": 151.75
+        }
+      },
+      {
+        "id": "W07",
+        "label": "ubiquitous term: \"fyp\"",
+        "total": 6741,
+        "page": 30,
+        "chipCounts": [
+          6741
+        ],
+        "ms": {
+          "n": 25,
+          "mean": 8.95,
+          "p50": 8.7,
+          "p95": 10.2,
+          "max": 10.7
+        },
+        "meanComponentsMs": {
+          "candidates": 5.47,
+          "total": 0.42,
+          "hydrate": 0.89,
+          "facets": 0.56,
+          "attribution": 1.56
+        }
+      }
+    ],
+    "cjkAndEmoji": {
+      "レシピ": {
+        "hitsFirstPage": 30,
+        "ms": {
+          "n": 15,
+          "mean": 0.04,
+          "p50": 0,
+          "p95": 0.3,
+          "max": 0.3
+        }
+      },
+      "メイク": {
+        "hitsFirstPage": 30,
+        "ms": {
+          "n": 15,
+          "mean": 0.03,
+          "p50": 0,
+          "p95": 0.1,
+          "max": 0.1
+        }
+      },
+      "筋トレ": {
+        "hitsFirstPage": 30,
+        "ms": {
+          "n": 15,
+          "mean": 0.03,
+          "p50": 0,
+          "p95": 0.1,
+          "max": 0.1
+        }
+      },
+      "receta": {
+        "hitsFirstPage": 30,
+        "ms": {
+          "n": 15,
+          "mean": 0.14,
+          "p50": 0.1,
+          "p95": 0.6,
+          "max": 0.6
+        }
+      },
+      "簡単 via FTS5 prefix": {
+        "hits": 287
+      },
+      "レシピ via FTS5 (mid-token)": {
+        "hits": 0
+      },
+      "emoji 🍝 via FTS5": {
+        "hits": 0
+      }
+    },
+    "likeFallback": {
+      "レシピ": {
+        "hitsFirstPage": 30,
+        "total": 287,
+        "firstPageMs": {
+          "n": 10,
+          "mean": 2.64,
+          "p50": 2.2,
+          "p95": 4.9,
+          "max": 4.9
+        },
+        "countMs": {
+          "n": 10,
+          "mean": 20.2,
+          "p50": 20.1,
+          "p95": 27.1,
+          "max": 27.1
+        }
+      },
+      "簡単": {
+        "hitsFirstPage": 30,
+        "total": 287,
+        "firstPageMs": {
+          "n": 10,
+          "mean": 2.18,
+          "p50": 2.2,
+          "p95": 2.7,
+          "max": 2.7
+        },
+        "countMs": {
+          "n": 10,
+          "mean": 18.26,
+          "p50": 17.8,
+          "p95": 20.5,
+          "max": 20.5
+        }
+      },
+      "🍝": {
+        "hitsFirstPage": 30,
+        "total": 1038,
+        "firstPageMs": {
+          "n": 10,
+          "mean": 0.87,
+          "p50": 0.8,
+          "p95": 1.3,
+          "max": 1.3
+        },
+        "countMs": {
+          "n": 10,
+          "mean": 20.01,
+          "p50": 19.1,
+          "p95": 28.9,
+          "max": 28.9
+        }
+      },
+      "メイク": {
+        "hitsFirstPage": 30,
+        "total": 220,
+        "firstPageMs": {
+          "n": 10,
+          "mean": 3.16,
+          "p50": 3,
+          "p95": 4.7,
+          "max": 4.7
+        },
+        "countMs": {
+          "n": 10,
+          "mean": 22.06,
+          "p50": 21.9,
+          "p95": 29.5,
+          "max": 29.5
+        }
+      },
+      "food (FTS) AND レシピ (LIKE)": {
+        "total": 46,
+        "ms": {
+          "n": 10,
+          "mean": 13.81,
+          "p50": 13.2,
+          "p95": 20.1,
+          "max": 20.1
+        }
+      }
+    },
+    "didYouMean": [
+      {
+        "vocabSize": 5000,
+        "ms": {
+          "n": 20,
+          "mean": 1.13,
+          "p50": 0.8,
+          "p95": 6.9,
+          "max": 6.9
+        },
+        "example": "makeup"
+      },
+      {
+        "vocabSize": 50000,
+        "ms": {
+          "n": 20,
+          "mean": 8.43,
+          "p50": 8.2,
+          "p95": 11.9,
+          "max": 11.9
+        },
+        "example": "makeup"
+      }
+    ],
+    "export": {
+      "ms": 66.1,
+      "sizeMB": 117.3
+    },
+    "poolCapacity": 10,
+    "poolFiles": [
+      "/scroganize.db",
+      "/scroganize.db-journal"
+    ]
+  },
+  "reopen": {
+    "wasmInitMs": 46.7,
+    "vfsInstallMs": 19.5,
+    "installAttempts": 1,
+    "waitedForHandlesMs": 19.5,
+    "dbOpenMs": 2.9,
+    "rowsAfterReopen": 50000,
+    "firstQueryMs": 49.7,
+    "firstQueryTotal": 11211,
+    "warmSample": [
+      {
+        "id": "W01",
+        "label": "1 chip: \"food\" (+related)",
+        "total": 11211,
+        "page": 30,
+        "chipCounts": [
+          11211
+        ],
+        "ms": {
+          "n": 20,
+          "mean": 27.71,
+          "p50": 28,
+          "p95": 30.8,
+          "max": 30.8
+        },
+        "meanComponentsMs": {
+          "candidates": 19.06,
+          "total": 3.41,
+          "hydrate": 1.5,
+          "facets": 2.11,
+          "attribution": 1.56
+        }
+      },
+      {
+        "id": "W03",
+        "label": "5 chips AND: food dinner easy quick chicken",
+        "total": 8,
+        "page": 8,
+        "chipCounts": [
+          11211,
+          4861,
+          3509,
+          3495,
+          2466
+        ],
+        "ms": {
+          "n": 20,
+          "mean": 22.83,
+          "p50": 22.6,
+          "p95": 27.6,
+          "max": 27.6
+        },
+        "meanComponentsMs": {
+          "candidates": 6.94,
+          "total": 2.71,
+          "chipCounts": 4.75,
+          "hydrate": 0.59,
+          "facets": 0.22,
+          "attribution": 7.55
+        }
+      }
+    ],
+    "quickCheck": "ok",
+    "msFromTerminateToReady": 2541.1
+  },
+  "contention": {
+    "second_install": "rejected",
+    "error": "Failed to execute 'createSyncAccessHandle' on 'FileSystemFileHandle': Access Handles cannot be created if there is another open Access Handle or Writable stream associated with the same file.",
+    "ms": 40.1
+  }
+}

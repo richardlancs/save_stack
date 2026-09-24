@@ -1,0 +1,848 @@
+{
+  "browser": "153.0.8010.12",
+  "options": {
+    "runs": 30,
+    "mode": "bench"
+  },
+  "bench": {
+    "rows": 50000,
+    "compare": [
+      {
+        "id": "W01",
+        "label": "1 chip: \"food\" (+related)",
+        "total": 11211,
+        "v1": {
+          "n": 30,
+          "mean": 31.33,
+          "p50": 30.9,
+          "p95": 36.9,
+          "max": 40.3
+        },
+        "v2Fast": {
+          "n": 30,
+          "mean": 14.57,
+          "p50": 13.7,
+          "p95": 21.5,
+          "max": 23.6
+        },
+        "v2Capped": {
+          "n": 30,
+          "mean": 13.73,
+          "p50": 13.8,
+          "p95": 18.5,
+          "max": 19.6
+        },
+        "v2Expand30Capped": {
+          "n": 30,
+          "mean": 13,
+          "p50": 12.8,
+          "p95": 17.3,
+          "max": 20.8
+        },
+        "v2Components": {
+          "tier1": 5,
+          "total": 3.83,
+          "hydrate": 1.46,
+          "facets": 2.18
+        },
+        "v2ChipCounts": {
+          "n": 30,
+          "mean": 17.34,
+          "p50": 17.7,
+          "p95": 21.8,
+          "max": 24.4
+        },
+        "v2Explain1": {
+          "n": 30,
+          "mean": 18.98,
+          "p50": 19.3,
+          "p95": 25.8,
+          "max": 29.9
+        },
+        "v2Explain30": {
+          "n": 30,
+          "mean": 21.11,
+          "p50": 21.7,
+          "p95": 26.5,
+          "max": 27.2
+        },
+        "firstPageAgreement": "0/5 of first 5 ids agree with v1"
+      },
+      {
+        "id": "W02",
+        "label": "2 chips AND: food + easy",
+        "total": 851,
+        "v1": {
+          "n": 30,
+          "mean": 34.99,
+          "p50": 35.4,
+          "p95": 41.4,
+          "max": 41.7
+        },
+        "v2Fast": {
+          "n": 30,
+          "mean": 12.81,
+          "p50": 12.5,
+          "p95": 17.9,
+          "max": 18.2
+        },
+        "v2Capped": {
+          "n": 30,
+          "mean": 13.14,
+          "p50": 12.6,
+          "p95": 19.5,
+          "max": 22.9
+        },
+        "v2Expand30Capped": {
+          "n": 30,
+          "mean": 14.55,
+          "p50": 13.6,
+          "p95": 20.5,
+          "max": 20.6
+        },
+        "v2Components": {
+          "tier1": 2.35,
+          "total": 4.08,
+          "hydrate": 1.75,
+          "facets": 2.95
+        },
+        "v2ChipCounts": {
+          "n": 30,
+          "mean": 19.46,
+          "p50": 18.9,
+          "p95": 25.5,
+          "max": 25.8
+        },
+        "v2Explain1": {
+          "n": 30,
+          "mean": 12.36,
+          "p50": 12.5,
+          "p95": 16.6,
+          "max": 18.1
+        },
+        "v2Explain30": {
+          "n": 30,
+          "mean": 19.91,
+          "p50": 19.8,
+          "p95": 30.2,
+          "max": 31.3
+        },
+        "firstPageAgreement": "0/5 of first 5 ids agree with v1"
+      },
+      {
+        "id": "W03",
+        "label": "5 chips AND: food dinner easy quick chicken",
+        "total": 8,
+        "v1": {
+          "n": 30,
+          "mean": 42.08,
+          "p50": 43,
+          "p95": 49,
+          "max": 50.1
+        },
+        "v2Fast": {
+          "n": 30,
+          "mean": 24.43,
+          "p50": 25.2,
+          "p95": 29.5,
+          "max": 35
+        },
+        "v2Capped": {
+          "n": 30,
+          "mean": 23.62,
+          "p50": 22.4,
+          "p95": 33.6,
+          "max": 34
+        },
+        "v2Expand30Capped": {
+          "n": 30,
+          "mean": 28.81,
+          "p50": 30.3,
+          "p95": 37.4,
+          "max": 38.8
+        },
+        "v2Components": {
+          "tier1": 4.23,
+          "tier2": 15.4,
+          "total": 5.13,
+          "hydrate": 0.93,
+          "facets": 0.4
+        },
+        "v2ChipCounts": {
+          "n": 30,
+          "mean": 32.81,
+          "p50": 34.2,
+          "p95": 39.8,
+          "max": 42.2
+        },
+        "v2Explain1": {
+          "n": 30,
+          "mean": 26.63,
+          "p50": 27.2,
+          "p95": 32.6,
+          "max": 35.3
+        },
+        "v2Explain30": {
+          "n": 30,
+          "mean": 37.08,
+          "p50": 35.9,
+          "p95": 48.3,
+          "max": 59.9
+        },
+        "firstPageAgreement": "5/5 of first 5 ids agree with v1"
+      },
+      {
+        "id": "W04",
+        "label": "4 chips ANY: makeup skincare hair fashion",
+        "total": 18731,
+        "v1": {
+          "n": 30,
+          "mean": 300.19,
+          "p50": 302,
+          "p95": 327.3,
+          "max": 341.9
+        },
+        "v2Fast": {
+          "n": 30,
+          "mean": 42.87,
+          "p50": 44.4,
+          "p95": 53.5,
+          "max": 57.9
+        },
+        "v2Capped": {
+          "n": 30,
+          "mean": 39.67,
+          "p50": 39.3,
+          "p95": 48.3,
+          "max": 49.6
+        },
+        "v2Expand30Capped": {
+          "n": 30,
+          "mean": 49.02,
+          "p50": 49.7,
+          "p95": 59.1,
+          "max": 65.1
+        },
+        "v2Components": {
+          "tier1": 23.78,
+          "total": 14.22,
+          "hydrate": 2.03,
+          "facets": 3.26
+        },
+        "v2ChipCounts": {
+          "n": 30,
+          "mean": 52.42,
+          "p50": 53.3,
+          "p95": 63,
+          "max": 65.4
+        },
+        "v2Explain1": {
+          "n": 30,
+          "mean": 45.41,
+          "p50": 46.4,
+          "p95": 55.1,
+          "max": 56.6
+        },
+        "v2Explain30": {
+          "n": 30,
+          "mean": 223.28,
+          "p50": 223.9,
+          "p95": 249.9,
+          "max": 254.5
+        },
+        "firstPageAgreement": "0/5 of first 5 ids agree with v1"
+      },
+      {
+        "id": "W05",
+        "label": "5 chips ANY (broad): food makeup fitness travel fashion",
+        "total": 31367,
+        "v1": {
+          "n": 30,
+          "mean": 443.84,
+          "p50": 449.9,
+          "p95": 479.1,
+          "max": 485.4
+        },
+        "v2Fast": {
+          "n": 30,
+          "mean": 62.2,
+          "p50": 63.2,
+          "p95": 73.6,
+          "max": 76
+        },
+        "v2Capped": {
+          "n": 30,
+          "mean": 50.22,
+          "p50": 50.9,
+          "p95": 60.3,
+          "max": 65.1
+        },
+        "v2Expand30Capped": {
+          "n": 30,
+          "mean": 60.32,
+          "p50": 59.9,
+          "p95": 72.8,
+          "max": 76.1
+        },
+        "v2Components": {
+          "tier1": 31.74,
+          "total": 25.2,
+          "hydrate": 2.11,
+          "facets": 3.19
+        },
+        "v2ChipCounts": {
+          "n": 30,
+          "mean": 78.71,
+          "p50": 81.8,
+          "p95": 92.5,
+          "max": 94.7
+        },
+        "v2Explain1": {
+          "n": 30,
+          "mean": 71.5,
+          "p50": 74.4,
+          "p95": 82.3,
+          "max": 86.6
+        },
+        "v2Explain30": {
+          "n": 30,
+          "mean": 279.98,
+          "p50": 282.9,
+          "p95": 317,
+          "max": 321.3
+        },
+        "firstPageAgreement": "0/5 of first 5 ids agree with v1"
+      },
+      {
+        "id": "W06",
+        "label": "rare term: \"airfryer\"",
+        "total": 2481,
+        "v1": {
+          "n": 30,
+          "mean": 17.44,
+          "p50": 17.8,
+          "p95": 21.6,
+          "max": 25.3
+        },
+        "v2Fast": {
+          "n": 30,
+          "mean": 9.28,
+          "p50": 9.5,
+          "p95": 15.8,
+          "max": 16.9
+        },
+        "v2Capped": {
+          "n": 30,
+          "mean": 11.06,
+          "p50": 11.3,
+          "p95": 18.7,
+          "max": 24
+        },
+        "v2Expand30Capped": {
+          "n": 30,
+          "mean": 8.59,
+          "p50": 8.4,
+          "p95": 13.2,
+          "max": 13.3
+        },
+        "v2Components": {
+          "tier1": 4.01,
+          "total": 0.57,
+          "hydrate": 1.73,
+          "facets": 2.78
+        },
+        "v2ChipCounts": {
+          "n": 30,
+          "mean": 8.58,
+          "p50": 8.3,
+          "p95": 12.2,
+          "max": 13.1
+        },
+        "v2Explain1": {
+          "n": 30,
+          "mean": 10.2,
+          "p50": 9.8,
+          "p95": 13.9,
+          "max": 16.5
+        },
+        "v2Explain30": {
+          "n": 30,
+          "mean": 16.61,
+          "p50": 16.7,
+          "p95": 21,
+          "max": 22.4
+        },
+        "firstPageAgreement": "5/5 of first 5 ids agree with v1"
+      },
+      {
+        "id": "W07",
+        "label": "ubiquitous term: \"fyp\"",
+        "total": 6741,
+        "v1": {
+          "n": 30,
+          "mean": 19.36,
+          "p50": 18.6,
+          "p95": 29.1,
+          "max": 32.1
+        },
+        "v2Fast": {
+          "n": 30,
+          "mean": 11.61,
+          "p50": 11.6,
+          "p95": 17.9,
+          "max": 19.8
+        },
+        "v2Capped": {
+          "n": 30,
+          "mean": 14.22,
+          "p50": 14.2,
+          "p95": 17.6,
+          "max": 17.7
+        },
+        "v2Expand30Capped": {
+          "n": 30,
+          "mean": 12.49,
+          "p50": 12.9,
+          "p95": 16.2,
+          "max": 18.1
+        },
+        "v2Components": {
+          "tier1": 7.99,
+          "total": 0.85,
+          "hydrate": 1.42,
+          "facets": 1.96
+        },
+        "v2ChipCounts": {
+          "n": 30,
+          "mean": 10.99,
+          "p50": 11.1,
+          "p95": 15.1,
+          "max": 17.6
+        },
+        "v2Explain1": {
+          "n": 30,
+          "mean": 13.69,
+          "p50": 13.2,
+          "p95": 19.8,
+          "max": 26.2
+        },
+        "v2Explain30": {
+          "n": 30,
+          "mean": 15.16,
+          "p50": 14.4,
+          "p95": 23.1,
+          "max": 31.6
+        },
+        "firstPageAgreement": "5/5 of first 5 ids agree with v1"
+      },
+      {
+        "id": "W08",
+        "label": "collection-name chip: \"recipes\"",
+        "total": 9497,
+        "v1": {
+          "n": 30,
+          "mean": 45.95,
+          "p50": 45.7,
+          "p95": 56.8,
+          "max": 57.6
+        },
+        "v2Fast": {
+          "n": 30,
+          "mean": 19.74,
+          "p50": 19.2,
+          "p95": 27.7,
+          "max": 29.8
+        },
+        "v2Capped": {
+          "n": 30,
+          "mean": 18.46,
+          "p50": 18,
+          "p95": 24.6,
+          "max": 24.9
+        },
+        "v2Expand30Capped": {
+          "n": 30,
+          "mean": 17.94,
+          "p50": 19.2,
+          "p95": 21.8,
+          "max": 22.5
+        },
+        "v2Components": {
+          "tier1": 12.71,
+          "total": 1.76,
+          "hydrate": 1.92,
+          "facets": 2.83
+        },
+        "v2ChipCounts": {
+          "n": 30,
+          "mean": 19.36,
+          "p50": 19.7,
+          "p95": 25,
+          "max": 26.8
+        },
+        "v2Explain1": {
+          "n": 30,
+          "mean": 18.82,
+          "p50": 19,
+          "p95": 23.6,
+          "max": 38.8
+        },
+        "v2Explain30": {
+          "n": 30,
+          "mean": 44.99,
+          "p50": 45.7,
+          "p95": 53.9,
+          "max": 54.9
+        },
+        "firstPageAgreement": "5/5 of first 5 ids agree with v1"
+      },
+      {
+        "id": "W09",
+        "label": "multiword chip: \"meal prep\"",
+        "total": 3183,
+        "v1": {
+          "n": 30,
+          "mean": 22.72,
+          "p50": 22.2,
+          "p95": 31.7,
+          "max": 32.5
+        },
+        "v2Fast": {
+          "n": 30,
+          "mean": 11.73,
+          "p50": 12.2,
+          "p95": 15.2,
+          "max": 15.9
+        },
+        "v2Capped": {
+          "n": 30,
+          "mean": 11.14,
+          "p50": 11.1,
+          "p95": 14.6,
+          "max": 15.4
+        },
+        "v2Expand30Capped": {
+          "n": 30,
+          "mean": 11.37,
+          "p50": 11.2,
+          "p95": 15.5,
+          "max": 16.4
+        },
+        "v2Components": {
+          "tier1": 5.5,
+          "total": 0.79,
+          "hydrate": 1.6,
+          "facets": 2.48
+        },
+        "v2ChipCounts": {
+          "n": 30,
+          "mean": 10.71,
+          "p50": 11,
+          "p95": 14.9,
+          "max": 15.5
+        },
+        "v2Explain1": {
+          "n": 30,
+          "mean": 9.58,
+          "p50": 9.2,
+          "p95": 16.1,
+          "max": 16.2
+        },
+        "v2Explain30": {
+          "n": 30,
+          "mean": 20.69,
+          "p50": 21.1,
+          "p95": 32.5,
+          "max": 34.9
+        },
+        "firstPageAgreement": "5/5 of first 5 ids agree with v1"
+      },
+      {
+        "id": "W10",
+        "label": "sort by views: food",
+        "total": 11211,
+        "v1": {
+          "n": 30,
+          "mean": 42.05,
+          "p50": 41.4,
+          "p95": 53.3,
+          "max": 59
+        },
+        "v2Fast": {
+          "n": 30,
+          "mean": 22.91,
+          "p50": 21.7,
+          "p95": 30.5,
+          "max": 34
+        },
+        "v2Capped": {
+          "n": 30,
+          "mean": 22.77,
+          "p50": 23,
+          "p95": 28.3,
+          "max": 29.4
+        },
+        "v2Expand30Capped": {
+          "n": 30,
+          "mean": 34.72,
+          "p50": 35.7,
+          "p95": 38.5,
+          "max": 42.2
+        },
+        "v2Components": {
+          "candidates": 16.12,
+          "total": 5.8,
+          "hydrate": 2.33,
+          "facets": 0.71
+        },
+        "v2ChipCounts": {
+          "n": 30,
+          "mean": 23.64,
+          "p50": 24,
+          "p95": 27.6,
+          "max": 29.5
+        },
+        "v2Explain1": {
+          "n": 30,
+          "mean": 20.51,
+          "p50": 21.7,
+          "p95": 27.1,
+          "max": 32.2
+        },
+        "v2Explain30": {
+          "n": 30,
+          "mean": 41.73,
+          "p50": 41.6,
+          "p95": 57.8,
+          "max": 61.2
+        },
+        "firstPageAgreement": "5/5 of first 5 ids agree with v1"
+      },
+      {
+        "id": "W11",
+        "label": "sort recently saved: food + easy",
+        "total": 851,
+        "v1": {
+          "n": 30,
+          "mean": 22.95,
+          "p50": 23.6,
+          "p95": 29.8,
+          "max": 30.7
+        },
+        "v2Fast": {
+          "n": 30,
+          "mean": 12.09,
+          "p50": 12.7,
+          "p95": 15.3,
+          "max": 15.5
+        },
+        "v2Capped": {
+          "n": 30,
+          "mean": 11.9,
+          "p50": 12.6,
+          "p95": 14.6,
+          "max": 14.6
+        },
+        "v2Expand30Capped": {
+          "n": 30,
+          "mean": 20.22,
+          "p50": 21,
+          "p95": 28,
+          "max": 29.3
+        },
+        "v2Components": {
+          "candidates": 5.87,
+          "total": 4.7,
+          "hydrate": 1.93,
+          "facets": 0.57
+        },
+        "v2ChipCounts": {
+          "n": 30,
+          "mean": 16.28,
+          "p50": 16,
+          "p95": 20.8,
+          "max": 21.6
+        },
+        "v2Explain1": {
+          "n": 30,
+          "mean": 12.66,
+          "p50": 13,
+          "p95": 18,
+          "max": 18.4
+        },
+        "v2Explain30": {
+          "n": 30,
+          "mean": 18.44,
+          "p50": 19.4,
+          "p95": 22.8,
+          "max": 24.7
+        },
+        "firstPageAgreement": "5/5 of first 5 ids agree with v1"
+      },
+      {
+        "id": "W12",
+        "label": "no chips: browse all (recently saved)",
+        "total": 50000,
+        "v1": {
+          "n": 30,
+          "mean": 2.03,
+          "p50": 1.9,
+          "p95": 3,
+          "max": 3.6
+        },
+        "v2Fast": {
+          "n": 30,
+          "mean": 1.34,
+          "p50": 1.3,
+          "p95": 1.9,
+          "max": 2.1
+        },
+        "v2Capped": {
+          "n": 30,
+          "mean": 1.95,
+          "p50": 1.5,
+          "p95": 4.7,
+          "max": 5.9
+        },
+        "v2Expand30Capped": {
+          "n": 30,
+          "mean": 2.26,
+          "p50": 2,
+          "p95": 5.2,
+          "max": 5.6
+        },
+        "v2Components": {
+          "page": 0.05,
+          "total": 0.06,
+          "hydrate": 1.34
+        },
+        "v2ChipCounts": null,
+        "v2Explain1": null,
+        "v2Explain30": null,
+        "firstPageAgreement": "5/5 of first 5 ids agree with v1"
+      },
+      {
+        "id": "W13",
+        "label": "zero-result chip: \"makup\" (typo)",
+        "total": 0,
+        "v1": {
+          "n": 30,
+          "mean": 0.25,
+          "p50": 0.2,
+          "p95": 0.3,
+          "max": 0.4
+        },
+        "v2Fast": {
+          "n": 30,
+          "mean": 0.23,
+          "p50": 0.2,
+          "p95": 0.3,
+          "max": 0.8
+        },
+        "v2Capped": {
+          "n": 30,
+          "mean": 0.21,
+          "p50": 0.2,
+          "p95": 0.3,
+          "max": 0.3
+        },
+        "v2Expand30Capped": {
+          "n": 30,
+          "mean": 0.22,
+          "p50": 0.2,
+          "p95": 0.3,
+          "max": 0.3
+        },
+        "v2Components": {
+          "tier1": 0.03,
+          "total": 0.01,
+          "hydrate": 0.06,
+          "facets": 0.05
+        },
+        "v2ChipCounts": {
+          "n": 30,
+          "mean": 0.25,
+          "p50": 0.2,
+          "p95": 0.4,
+          "max": 0.8
+        },
+        "v2Explain1": {
+          "n": 30,
+          "mean": 0.28,
+          "p50": 0.2,
+          "p95": 0.7,
+          "max": 0.7
+        },
+        "v2Explain30": {
+          "n": 30,
+          "mean": 0.31,
+          "p50": 0.3,
+          "p95": 0.6,
+          "max": 0.7
+        },
+        "firstPageAgreement": "0/0 of first 5 ids agree with v1"
+      },
+      {
+        "id": "W14",
+        "label": "prefix: single letter-pair \"fo\"",
+        "total": 19443,
+        "v1": {
+          "n": 30,
+          "mean": 38.89,
+          "p50": 41.6,
+          "p95": 46.5,
+          "max": 47.5
+        },
+        "v2Fast": {
+          "n": 30,
+          "mean": 29.57,
+          "p50": 30.2,
+          "p95": 35.2,
+          "max": 36
+        },
+        "v2Capped": {
+          "n": 30,
+          "mean": 29.62,
+          "p50": 30,
+          "p95": 35.3,
+          "max": 38.2
+        },
+        "v2Expand30Capped": {
+          "n": 30,
+          "mean": 26.14,
+          "p50": 28.9,
+          "p95": 32.4,
+          "max": 37
+        },
+        "v2Components": {
+          "tier1": 20.96,
+          "total": 1.9,
+          "hydrate": 1.96,
+          "facets": 3.23
+        },
+        "v2ChipCounts": {
+          "n": 30,
+          "mean": 28.87,
+          "p50": 27.9,
+          "p95": 38.4,
+          "max": 40.5
+        },
+        "v2Explain1": {
+          "n": 30,
+          "mean": 28.04,
+          "p50": 29.8,
+          "p95": 34.9,
+          "max": 36.7
+        },
+        "v2Explain30": {
+          "n": 30,
+          "mean": 36.64,
+          "p50": 36.2,
+          "p95": 46.6,
+          "max": 49.4
+        },
+        "firstPageAgreement": "5/5 of first 5 ids agree with v1"
+      }
+    ]
+  }
+}

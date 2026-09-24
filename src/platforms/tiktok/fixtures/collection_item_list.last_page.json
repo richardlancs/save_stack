@@ -1,0 +1,423 @@
+{
+  "cursor": "48",
+  "extra": {
+    "fatal_item_ids": [],
+    "logid": "FAKELOGID0000",
+    "now": 1787000000000
+  },
+  "hasMore": false,
+  "itemList": [
+    {
+      "AIGCDescription": "",
+      "CategoryType": 0,
+      "IsHDBitrate": false,
+      "ShowAIGC": false,
+      "author": {
+        "avatarLarger": "https://example.invalid/avatarLarger/5",
+        "avatarMedium": "https://example.invalid/avatarMedium/5",
+        "avatarThumb": "https://example.invalid/avatarThumb/5",
+        "commentSetting": 0,
+        "downloadSetting": 0,
+        "duetSetting": 0,
+        "ftc": false,
+        "id": "7000000000000000105",
+        "isADVirtual": false,
+        "isEmbedBanned": false,
+        "nickname": "Nickname 5",
+        "openFavorite": false,
+        "privateAccount": false,
+        "relation": 0,
+        "secUid": "SECUID_5",
+        "secret": false,
+        "shortDramaCreator": {},
+        "signature": "",
+        "stitchSetting": 0,
+        "uniqueId": "author_005",
+        "verified": false
+      },
+      "authorStats": {
+        "diggCount": 0,
+        "followerCount": 5000,
+        "followingCount": 10,
+        "friendCount": 5,
+        "heart": 450000,
+        "heartCount": 450000,
+        "videoCount": 40
+      },
+      "authorStatsV2": {
+        "diggCount": "0",
+        "followerCount": "5000",
+        "followingCount": "10",
+        "friendCount": "5",
+        "heart": "450000",
+        "heartCount": "450000",
+        "videoCount": "40"
+      },
+      "backendSourceEventTracking": "",
+      "collected": true,
+      "createTime": 1777926400,
+      "creatorAIComment": {},
+      "desc": "Sample caption 24 #tag24 #fyp",
+      "digged": false,
+      "duetDisplay": 0,
+      "forFriend": false,
+      "id": "7000000000000001024",
+      "isAd": false,
+      "isProhibited": false,
+      "isReviewing": false,
+      "itemCommentStatus": 0,
+      "item_control": {},
+      "music": {
+        "authorName": "Sound Author 5",
+        "coverLarge": "https://example.invalid/musicLarge/24",
+        "coverMedium": "https://example.invalid/musicMedium/24",
+        "coverThumb": "https://example.invalid/musicThumb/24",
+        "duration": 30,
+        "id": "7000000000000002024",
+        "isCopyrighted": true,
+        "is_commerce_music": false,
+        "is_unlimited_music": false,
+        "original": true,
+        "playUrl": "https://example.invalid/musicPlay/24",
+        "private": false,
+        "shoot_duration": 30,
+        "title": "Sound 24",
+        "tt2dsp": {}
+      },
+      "officalItem": false,
+      "originalItem": false,
+      "privateItem": false,
+      "secret": false,
+      "shareEnabled": true,
+      "stats": {
+        "collectCount": 2400,
+        "commentCount": 240,
+        "diggCount": 24000,
+        "playCount": 240000,
+        "shareCount": 1200
+      },
+      "statsV2": {
+        "collectCount": "2400",
+        "commentCount": "240",
+        "diggCount": "24000",
+        "playCount": "240000",
+        "shareCount": "1200",
+        "repostCount": "0"
+      },
+      "stitchDisplay": 0,
+      "textLanguage": "en",
+      "textTranslatable": true,
+      "video": {
+        "VQScore": "55.10",
+        "bitrate": 280000,
+        "bitrateInfo": [],
+        "claInfo": {},
+        "codecType": "h264",
+        "cover": "https://example.invalid/cover/24",
+        "definition": "540p",
+        "downloadAddr": "https://example.invalid/download/24",
+        "duration": 39,
+        "dynamicCover": "https://example.invalid/dynamicCover/24",
+        "encodeUserTag": "",
+        "encodedType": "normal",
+        "format": "mp4",
+        "height": 576,
+        "id": "7000000000000001024",
+        "originCover": "https://example.invalid/originCover/24",
+        "playAddr": "https://example.invalid/play/24",
+        "ratio": "540p",
+        "size": 561625,
+        "videoQuality": "normal",
+        "volumeInfo": {},
+        "width": 576,
+        "zoomCover": {},
+        "PlayAddrStruct": {}
+      },
+      "challenges": [
+        {
+          "coverLarger": "",
+          "coverMedium": "",
+          "coverThumb": "",
+          "desc": "",
+          "id": "7000000000000003240",
+          "profileLarger": "",
+          "profileMedium": "",
+          "profileThumb": "",
+          "title": "tag24"
+        },
+        {
+          "coverLarger": "",
+          "coverMedium": "",
+          "coverThumb": "",
+          "desc": "",
+          "id": "7000000000000003241",
+          "profileLarger": "",
+          "profileMedium": "",
+          "profileThumb": "",
+          "title": "fyp"
+        }
+      ],
+      "textExtra": [
+        {
+          "awemeId": "7000000000000001024",
+          "end": 24,
+          "hashtagName": "tag24",
+          "isCommerce": false,
+          "start": 18,
+          "subType": 0,
+          "type": 1
+        },
+        {
+          "awemeId": "7000000000000001024",
+          "end": 29,
+          "hashtagName": "fyp",
+          "isCommerce": false,
+          "start": 25,
+          "subType": 0,
+          "type": 1
+        }
+      ],
+      "contents": [
+        {
+          "desc": "Sample caption 24 #tag24 #fyp",
+          "textExtra": [
+            {
+              "awemeId": "7000000000000001024",
+              "end": 24,
+              "hashtagName": "tag24",
+              "isCommerce": false,
+              "start": 18,
+              "subType": 0,
+              "type": 1
+            },
+            {
+              "awemeId": "7000000000000001024",
+              "end": 29,
+              "hashtagName": "fyp",
+              "isCommerce": false,
+              "start": 25,
+              "subType": 0,
+              "type": 1
+            }
+          ]
+        }
+      ],
+      "duetEnabled": true,
+      "stitchEnabled": true,
+      "diversificationId": 10024,
+      "penaltyContext": {},
+      "videoSuggestWordsList": {},
+      "effectStickers": [],
+      "stickersOnItem": []
+    },
+    {
+      "AIGCDescription": "",
+      "CategoryType": 0,
+      "IsHDBitrate": false,
+      "ShowAIGC": false,
+      "author": {
+        "avatarLarger": "https://example.invalid/avatarLarger/1",
+        "avatarMedium": "https://example.invalid/avatarMedium/1",
+        "avatarThumb": "https://example.invalid/avatarThumb/1",
+        "commentSetting": 0,
+        "downloadSetting": 0,
+        "duetSetting": 0,
+        "ftc": false,
+        "id": "7000000000000000101",
+        "isADVirtual": false,
+        "isEmbedBanned": false,
+        "nickname": "Nickname 1",
+        "openFavorite": false,
+        "privateAccount": false,
+        "relation": 0,
+        "secUid": "SECUID_1",
+        "secret": false,
+        "shortDramaCreator": {},
+        "signature": "",
+        "stitchSetting": 0,
+        "uniqueId": "author_001",
+        "verified": false
+      },
+      "authorStats": {
+        "diggCount": 0,
+        "followerCount": 1000,
+        "followingCount": 10,
+        "friendCount": 5,
+        "heart": 90000,
+        "heartCount": 90000,
+        "videoCount": 40
+      },
+      "authorStatsV2": {
+        "diggCount": "0",
+        "followerCount": "1000",
+        "followingCount": "10",
+        "friendCount": "5",
+        "heart": "90000",
+        "heartCount": "90000",
+        "videoCount": "40"
+      },
+      "backendSourceEventTracking": "",
+      "collected": true,
+      "createTime": 1777840000,
+      "creatorAIComment": {},
+      "desc": "Sample caption 25 #tag25 #fyp",
+      "digged": false,
+      "duetDisplay": 0,
+      "forFriend": false,
+      "id": "7000000000000001025",
+      "isAd": false,
+      "isProhibited": false,
+      "isReviewing": false,
+      "itemCommentStatus": 0,
+      "item_control": {},
+      "music": {
+        "authorName": "Sound Author 1",
+        "coverLarge": "https://example.invalid/musicLarge/25",
+        "coverMedium": "https://example.invalid/musicMedium/25",
+        "coverThumb": "https://example.invalid/musicThumb/25",
+        "duration": 30,
+        "id": "7000000000000002025",
+        "isCopyrighted": true,
+        "is_commerce_music": false,
+        "is_unlimited_music": false,
+        "original": false,
+        "playUrl": "https://example.invalid/musicPlay/25",
+        "private": false,
+        "shoot_duration": 30,
+        "title": "Sound 25",
+        "tt2dsp": {}
+      },
+      "officalItem": false,
+      "originalItem": false,
+      "privateItem": false,
+      "secret": false,
+      "shareEnabled": true,
+      "stats": {
+        "collectCount": 2500,
+        "commentCount": 250,
+        "diggCount": 25000,
+        "playCount": 250000,
+        "shareCount": 1250
+      },
+      "statsV2": {
+        "collectCount": "2500",
+        "commentCount": "250",
+        "diggCount": "25000",
+        "playCount": "250000",
+        "shareCount": "1250",
+        "repostCount": "0"
+      },
+      "stitchDisplay": 0,
+      "textLanguage": "en",
+      "textTranslatable": true,
+      "video": {
+        "VQScore": "55.10",
+        "bitrate": 280000,
+        "bitrateInfo": [],
+        "claInfo": {},
+        "codecType": "h264",
+        "cover": "https://example.invalid/cover/25",
+        "definition": "540p",
+        "downloadAddr": "https://example.invalid/download/25",
+        "duration": 40,
+        "dynamicCover": "https://example.invalid/dynamicCover/25",
+        "encodeUserTag": "",
+        "encodedType": "normal",
+        "format": "mp4",
+        "height": 576,
+        "id": "7000000000000001025",
+        "originCover": "https://example.invalid/originCover/25",
+        "playAddr": "https://example.invalid/play/25",
+        "ratio": "540p",
+        "size": 561625,
+        "videoQuality": "normal",
+        "volumeInfo": {},
+        "width": 576,
+        "zoomCover": {},
+        "PlayAddrStruct": {}
+      },
+      "challenges": [
+        {
+          "coverLarger": "",
+          "coverMedium": "",
+          "coverThumb": "",
+          "desc": "",
+          "id": "7000000000000003250",
+          "profileLarger": "",
+          "profileMedium": "",
+          "profileThumb": "",
+          "title": "tag25"
+        },
+        {
+          "coverLarger": "",
+          "coverMedium": "",
+          "coverThumb": "",
+          "desc": "",
+          "id": "7000000000000003251",
+          "profileLarger": "",
+          "profileMedium": "",
+          "profileThumb": "",
+          "title": "fyp"
+        }
+      ],
+      "textExtra": [
+        {
+          "awemeId": "7000000000000001025",
+          "end": 24,
+          "hashtagName": "tag25",
+          "isCommerce": false,
+          "start": 18,
+          "subType": 0,
+          "type": 1
+        },
+        {
+          "awemeId": "7000000000000001025",
+          "end": 29,
+          "hashtagName": "fyp",
+          "isCommerce": false,
+          "start": 25,
+          "subType": 0,
+          "type": 1
+        }
+      ],
+      "contents": [
+        {
+          "desc": "Sample caption 25 #tag25 #fyp",
+          "textExtra": [
+            {
+              "awemeId": "7000000000000001025",
+              "end": 24,
+              "hashtagName": "tag25",
+              "isCommerce": false,
+              "start": 18,
+              "subType": 0,
+              "type": 1
+            },
+            {
+              "awemeId": "7000000000000001025",
+              "end": 29,
+              "hashtagName": "fyp",
+              "isCommerce": false,
+              "start": 25,
+              "subType": 0,
+              "type": 1
+            }
+          ]
+        }
+      ],
+      "duetEnabled": true,
+      "stitchEnabled": true,
+      "diversificationId": 10025,
+      "penaltyContext": {},
+      "videoSuggestWordsList": {},
+      "effectStickers": [],
+      "stickersOnItem": []
+    }
+  ],
+  "log_pb": {
+    "impr_id": "FAKELOGID0000"
+  },
+  "statusCode": 0,
+  "status_code": 0,
+  "status_msg": ""
+}

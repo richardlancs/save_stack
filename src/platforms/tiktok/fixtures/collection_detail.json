@@ -1,0 +1,25 @@
+{
+  "collectionInfo": {
+    "collectionId": "7000000000000000501",
+    "cover": {
+      "urlList": [
+        "https://example.invalid/collCover/1"
+      ]
+    },
+    "name": "Collection A",
+    "status": 1,
+    "total": "48",
+    "userId": "7000000000000000099",
+    "userName": "testuser"
+  },
+  "extra": {
+    "logid": "FAKELOGID0000",
+    "now": 1787000000000
+  },
+  "log_pb": {
+    "impr_id": "FAKELOGID0000"
+  },
+  "statusCode": 0,
+  "status_code": 0,
+  "status_msg": ""
+}

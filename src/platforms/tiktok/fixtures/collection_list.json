@@ -1,0 +1,93 @@
+{
+  "collectionList": [
+    {
+      "collectionId": "7000000000000000501",
+      "cover": {
+        "urlList": [
+          "https://example.invalid/collCover/1",
+          "https://example.invalid/collCover2/1",
+          "https://example.invalid/collCover3/1"
+        ]
+      },
+      "name": "Collection A",
+      "status": 1,
+      "total": "48",
+      "userId": "7000000000000000099",
+      "userName": "testuser"
+    },
+    {
+      "collectionId": "7000000000000000502",
+      "cover": {
+        "urlList": [
+          "https://example.invalid/collCover/2",
+          "https://example.invalid/collCover2/2",
+          "https://example.invalid/collCover3/2"
+        ]
+      },
+      "name": "Collection B",
+      "status": 1,
+      "total": "9",
+      "userId": "7000000000000000099",
+      "userName": "testuser"
+    },
+    {
+      "collectionId": "7000000000000000503",
+      "cover": {
+        "urlList": [
+          "https://example.invalid/collCover/3",
+          "https://example.invalid/collCover2/3",
+          "https://example.invalid/collCover3/3"
+        ]
+      },
+      "name": "Collection C",
+      "status": 1,
+      "total": "37",
+      "userId": "7000000000000000099",
+      "userName": "testuser"
+    },
+    {
+      "collectionId": "7000000000000000504",
+      "cover": {
+        "urlList": [
+          "https://example.invalid/collCover/4",
+          "https://example.invalid/collCover2/4",
+          "https://example.invalid/collCover3/4"
+        ]
+      },
+      "name": "Collection D",
+      "status": 0,
+      "total": "1",
+      "userId": "7000000000000000099",
+      "userName": "testuser"
+    },
+    {
+      "collectionId": "7000000000000000505",
+      "cover": {
+        "urlList": [
+          "https://example.invalid/collCover/5",
+          "https://example.invalid/collCover2/5",
+          "https://example.invalid/collCover3/5"
+        ]
+      },
+      "name": "Collection E",
+      "status": 1,
+      "total": "2",
+      "userId": "7000000000000000099",
+      "userName": "testuser"
+    }
+  ],
+  "cursor": "6",
+  "extra": {
+    "fatal_item_ids": [],
+    "logid": "FAKELOGID0000",
+    "now": 1787000000000
+  },
+  "hasMore": false,
+  "log_pb": {
+    "impr_id": "FAKELOGID0000"
+  },
+  "statusCode": 0,
+  "status_code": 0,
+  "status_msg": "",
+  "total": 6
+}

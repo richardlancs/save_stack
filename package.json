@@ -1,0 +1,26 @@
+{
+  "name": "scroganize",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Search your saved social-media collections (TikTok first) from a Chrome side panel.",
+  "scripts": {
+    "postinstall": "wxt prepare",
+    "dev": "wxt",
+    "build": "wxt build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "spike": "wxt build && node bench/run-spike.mjs",
+    "fixtures:tiktok": "node scripts/make-tiktok-fixtures.mjs"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.3.0",
+    "playwright": "^1.63.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1",
+    "wxt": "^0.21.4"
+  },
+  "dependencies": {
+    "@sqlite.org/sqlite-wasm": "^3.53.4-build1"
+  }
+}
